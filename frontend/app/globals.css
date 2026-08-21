@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply border-opacity-100;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-sans;
+}
+
+/* Warm, gentle color palette for mental health context */
+:root {
+  --color-primary-light: #faf6f1;
+  --color-primary-main: #c99a75;
+  --color-primary-dark: #845840;
+  --color-accent: #22c55e;
+}
+
+/* Smooth transitions */
+button,
+input,
+textarea,
+select {
+  @apply transition-all duration-200;
+}
+
+/* Accessible focus states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary-500;
+}
+
+/* Responsive text */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
