@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design Tokens - Light mode is default */
+:root {
+  /* Primary Palette - Warm Orange */
+  --umeed-orange-500: #F46B1F;
+  --umeed-orange-700: #C4491A;
+  --umeed-orange-100: #FDE3CE;
+
+  /* Neutrals (Warm) */
+  --umeed-beige-50: #FBF3E7;    /* Canvas/background */
+  --umeed-beige-200: #F2E4D0;   /* Surface/panels */
+  --umeed-ink-900: #3A2A1C;     /* Primary text */
+  --umeed-ink-500: #8C765F;     /* Secondary/muted */
+
+  /* Semantic */
+  --umeed-green-600: #3F7D4E;   /* Pattern insight ONLY */
+  --umeed-crisis-600: #C0392B;  /* Crisis mode ONLY */
+
+  /* Motion */
+  --ease-umeed: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-quick: 300ms;
+  --duration-standard: 400ms;
+
+  /* Force light mode by default - override system preference */
+  color-scheme: light;
+}
+
+/* Dark Mode - Only applies when .dark class is explicitly set */
+:root.dark {
+  --umeed-beige-50: #241811;
+  --umeed-beige-200: #342418;
+  --umeed-ink-900: #F5F0EA;
+  --umeed-ink-500: #C4B3A0;
+  --umeed-orange-500: #FF8A42;
+  --umeed-orange-700: #FFAA5F;
+  color-scheme: dark;
+}
+
 * {
   @apply border-opacity-100;
 }
@@ -11,41 +48,72 @@ html {
 }
 
 body {
-  @apply font-sans;
+  background-color: var(--umeed-beige-50);
+  color: var(--umeed-ink-900);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  transition: background-color var(--duration-standard) var(--ease-umeed), color var(--duration-standard) var(--ease-umeed);
 }
 
-/* Warm, gentle color palette for mental health context */
-:root {
-  --color-primary-light: #faf6f1;
-  --color-primary-main: #c99a75;
-  --color-primary-dark: #845840;
-  --color-accent: #22c55e;
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--umeed-ink-900);
 }
 
-/* Smooth transitions */
+h1 { font-size: 64px; }
+h2 { font-size: 44px; }
+h3 { font-size: 28px; }
+
+/* Urdu text */
+.urdu-text {
+  font-family: 'Noto Nastaliq Urdu', serif;
+  font-size: 1.1em;
+  line-height: 1.8;
+  color: var(--umeed-ink-900);
+  font-weight: 700;
+}
+
+/* Roman Urdu (italic, with English translation below) */
+.roman-urdu {
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-size: 20px;
+  color: var(--umeed-ink-900);
+}
+
+/* Smooth transitions on interactive elements */
 button,
 input,
 textarea,
 select {
-  @apply transition-all duration-200;
+  @apply transition-all duration-quick ease-umeed;
 }
 
 /* Accessible focus states */
 button:focus-visible,
 a:focus-visible,
-input:focus-visible {
-  @apply outline-2 outline-offset-2 outline-primary-500;
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--umeed-orange-500);
+  outline-offset: 2px;
 }
 
-/* Responsive text */
-@media (max-width: 640px) {
-  html {
-    font-size: 14px;
-  }
+/* Icon sizing proportional to adjacent text */
+.icon-inline {
+  height: 1.2em;
+  width: 1.2em;
+  flex-shrink: 0;
 }
 
-@media (min-width: 1024px) {
-  html {
-    font-size: 16px;
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

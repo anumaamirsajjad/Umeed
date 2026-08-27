@@ -6,14 +6,25 @@ import { savePreferences } from '@/lib/api';
 import type { UserPreferences } from '@/lib/types';
 import {
   SUPPORT_STYLE_OPTIONS,
-  COMMON_TOPICS_TO_AVOID,
+  TOPICS_OF_CONCERN,
   LANGUAGES,
   ROUTES,
 } from '@/lib/constants';
 
+type Step = 'name' | 'topics' | 'support-style' | 'languages' | 'complete';
+
+const STEP_NUMBER: Record<Step, number> = {
+  name: 1,
+  topics: 2,
+  'support-style': 3,
+  languages: 4,
+  complete: 4,
+};
+const TOTAL_STEPS = 4;
+
 export default function Onboarding() {
   const router = useRouter();
-  const [step, setStep] = useState<'welcome' | 'support-style' | 'topics' | 'languages' | 'complete'>('welcome');
+  const [step, setStep] = useState<Step>('name');
   const [loading, setLoading] = useState(false);
   const [userId] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -27,172 +38,554 @@ export default function Onboarding() {
   });
 
   const [preferences, setPreferences] = useState<Partial<UserPreferences>>({
+    name: '',
     preferredSupportStyle: 'mixed',
     topicsToAvoid: [],
+    topicsOfConcern: [],
     languages: ['en'],
   });
 
+  const handleTopicToggle = (topic: string) => {
+    const current = preferences.topicsOfConcern || [];
+    const updated = current.includes(topic)
+      ? current.filter((t) => t !== topic)
+      : [...current, topic];
+    setPreferences({ ...preferences, topicsOfConcern: updated });
+  };
+
   const handleSupportStyleChange = (style: string) => {
     setPreferences({ ...preferences, preferredSupportStyle: style as any });
-    setStep('topics');
+    setStep('languages');
   };
 
-  const handleTopicToggle = (topic: string) => {
-    const current = preferences.topicsToAvoid || [];
-    const updated = current.includes(topic)
-      ? current.filter(t => t !== topic)
-      : [...current, topic];
-    setPreferences({ ...preferences, topicsToAvoid: updated });
+  const handleLanguageChange = (code: string) => {
+    setPreferences({ ...preferences, languages: [code] });
   };
 
-  const handleLanguageToggle = (lang: string) => {
-    const current = preferences.languages || [];
-    const updated = current.includes(lang)
-      ? current.filter(l => l !== lang)
-      : [...current, lang];
-    setPreferences({ ...preferences, languages: updated });
-  };
-
-  const handleContinue = async () => {
-    if (step === 'languages') {
-      setLoading(true);
-      try {
-        await savePreferences(userId, preferences);
-        setStep('complete');
-        // Redirect to chat after 2 seconds
-        setTimeout(() => {
-          router.push(ROUTES.chat);
-        }, 2000);
-      } catch (error) {
-        console.error('Error saving preferences:', error);
-        alert('Error saving preferences. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    } else if (step === 'topics') {
-      setStep('languages');
+  const handleComplete = async () => {
+    setLoading(true);
+    try {
+      await savePreferences(userId, preferences);
+      setStep('complete');
+      setTimeout(() => {
+        router.push(ROUTES.chat);
+      }, 2000);
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      alert('Error saving preferences. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const currentStep = STEP_NUMBER[step];
+  const progress = (currentStep / TOTAL_STEPS) * 100;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-accent-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-2xl w-full">
-        {step === 'welcome' && (
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-primary-900 mb-4">
-              Welcome
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: 'var(--umeed-beige-50)',
+    }}>
+      {/* Progress bar */}
+      {step !== 'complete' && (
+        <div style={{
+          height: '4px',
+          backgroundColor: 'var(--umeed-orange-100)',
+          position: 'sticky',
+          top: 0,
+        }}>
+          <div style={{
+            height: '100%',
+            backgroundColor: 'var(--umeed-orange-500)',
+            width: `${progress}%`,
+            transition: 'width 400ms cubic-bezier(0.22, 1, 0.36, 1)',
+          }} />
+        </div>
+      )}
+
+      {step === 'name' && (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          paddingLeft: '20px',
+          paddingRight: '20px',
+        }}>
+          <div style={{
+            maxWidth: '500px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            width: '100%',
+          }}>
+            <h1 style={{
+              fontSize: '44px',
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontWeight: 700,
+              color: 'var(--umeed-ink-900)',
+              margin: '0 0 12px 0',
+            }}>
+              Hello, I'm Umeed.
             </h1>
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              Before we start, we'd like to understand how you prefer to get support. This helps us adapt our responses to what works best for you.
+            <p style={{
+              fontSize: '18px',
+              color: 'var(--umeed-ink-500)',
+              marginBottom: '48px',
+              lineHeight: 1.6,
+            }}>
+              Your companion for the days that feel heavy — and the lighter ones too.
             </p>
-            <p className="text-sm text-gray-500 mb-8">
-              We're not asking about your background or identity—just your preferences.
-            </p>
+
+            <div style={{ marginBottom: '32px' }}>
+              <label htmlFor="name-input" style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: 700,
+                color: 'var(--umeed-ink-900)',
+                marginBottom: '8px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                What should I call you?
+              </label>
+              <input
+                id="name-input"
+                type="text"
+                placeholder="Your name or nickname"
+                value={preferences.name || ''}
+                onChange={(e) => setPreferences({ ...preferences, name: e.target.value })}
+                maxLength={50}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '9999px',
+                  border: `1px solid var(--umeed-orange-100)`,
+                  backgroundColor: 'white',
+                  color: 'var(--umeed-ink-900)',
+                  fontSize: '16px',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  outline: 'none',
+                  transition: 'all 300ms',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--umeed-orange-100)';
+                }}
+              />
+            </div>
+
             <button
-              onClick={() => setStep('support-style')}
-              className="bg-accent-500 hover:bg-accent-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
+              onClick={() => setStep('topics')}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                borderRadius: '9999px',
+                backgroundColor: 'var(--umeed-orange-500)',
+                color: 'white',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '16px',
+                cursor: 'pointer',
+                transition: 'all 300ms',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-700)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-500)';
+              }}
             >
-              Get Started
+              Let's start
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {step === 'support-style' && (
-          <div>
-            <h2 className="text-2xl font-bold text-primary-900 mb-6">
-              How do you prefer to get support?
-            </h2>
-            <div className="space-y-3">
-              {SUPPORT_STYLE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handleSupportStyleChange(option.value)}
-                  className="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-accent-400 hover:bg-accent-50 transition-colors"
-                >
-                  <div className="font-semibold text-gray-900">{option.label}</div>
-                  <div className="text-sm text-gray-600">{option.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 'topics' && (
-          <div>
-            <h2 className="text-2xl font-bold text-primary-900 mb-4">
-              Any topics you'd like us to avoid?
-            </h2>
-            <p className="text-gray-600 mb-6 text-sm">
-              (Optional — select topics you prefer not to discuss right now)
+      {step === 'topics' && (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          paddingLeft: '20px',
+          paddingRight: '20px',
+        }}>
+          <div style={{
+            maxWidth: '500px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            width: '100%',
+          }}>
+            <h1 style={{
+              fontSize: '44px',
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontWeight: 700,
+              color: 'var(--umeed-ink-900)',
+              margin: '0 0 12px 0',
+            }}>
+              What's on your mind?
+            </h1>
+            <p style={{
+              fontSize: '18px',
+              color: 'var(--umeed-ink-500)',
+              marginBottom: '48px',
+              lineHeight: 1.6,
+            }}>
+              Pick whatever feels true right now. You can always change this.
             </p>
-            <div className="space-y-2">
-              {COMMON_TOPICS_TO_AVOID.map((topic) => (
-                <label key={topic} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={preferences.topicsToAvoid?.includes(topic) || false}
-                    onChange={() => handleTopicToggle(topic)}
-                    className="mr-3 w-5 h-5 text-accent-500"
-                  />
-                  <span className="text-gray-900">{topic}</span>
-                </label>
-              ))}
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '12px',
+              marginBottom: '32px',
+            }} role="group" aria-label="What's on your mind">
+              {TOPICS_OF_CONCERN.map((topic) => {
+                const selected = preferences.topicsOfConcern?.includes(topic) || false;
+                return (
+                  <button
+                    key={topic}
+                    onClick={() => handleTopicToggle(topic)}
+                    style={{
+                      padding: '16px 12px',
+                      borderRadius: '8px',
+                      border: selected ? 'none' : `1px solid var(--umeed-orange-100)`,
+                      backgroundColor: selected ? 'var(--umeed-orange-500)' : 'white',
+                      color: selected ? 'white' : 'var(--umeed-ink-900)',
+                      fontWeight: 700,
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      transition: 'all 300ms',
+                      textAlign: 'center',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!selected) {
+                        e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!selected) {
+                        e.currentTarget.style.backgroundColor = 'white';
+                      }
+                    }}
+                  >
+                    {topic}
+                  </button>
+                );
+              })}
             </div>
+
             <button
-              onClick={() => setStep('languages')}
-              className="mt-8 bg-accent-500 hover:bg-accent-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors w-full"
+              onClick={() => setStep('support-style')}
+              disabled={(preferences.topicsOfConcern?.length || 0) === 0}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                borderRadius: '9999px',
+                backgroundColor: 'var(--umeed-orange-500)',
+                color: 'white',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '16px',
+                cursor: 'pointer',
+                transition: 'all 300ms',
+                opacity: (preferences.topicsOfConcern?.length || 0) === 0 ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if ((preferences.topicsOfConcern?.length || 0) > 0) {
+                  e.currentTarget.style.backgroundColor = 'var(--umeed-orange-700)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-500)';
+              }}
             >
               Continue
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {step === 'languages' && (
-          <div>
-            <h2 className="text-2xl font-bold text-primary-900 mb-4">
-              Preferred languages
-            </h2>
-            <p className="text-gray-600 mb-6 text-sm">
-              Select the languages you'd like us to use when possible.
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {LANGUAGES.map((lang) => (
-                <label key={lang.code} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={preferences.languages?.includes(lang.code) || false}
-                    onChange={() => handleLanguageToggle(lang.code)}
-                    className="mr-3 w-5 h-5 text-accent-500"
-                  />
-                  <span className="text-gray-900">{lang.name}</span>
-                </label>
-              ))}
+      {step === 'support-style' && (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          paddingLeft: '20px',
+          paddingRight: '20px',
+        }}>
+          <div style={{
+            maxWidth: '500px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            width: '100%',
+          }}>
+            <h1 style={{
+              fontSize: '44px',
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontWeight: 700,
+              color: 'var(--umeed-ink-900)',
+              margin: '0 0 12px 0',
+            }}>
+              How do you prefer support?
+            </h1>
+
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              marginTop: '32px',
+              marginBottom: '32px',
+            }} role="radiogroup" aria-label="Preferred support style">
+              {SUPPORT_STYLE_OPTIONS.map((option) => {
+                const checked = preferences.preferredSupportStyle === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => handleSupportStyleChange(option.value)}
+                    style={{
+                      textAlign: 'left',
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: checked ? 'none' : `1px solid var(--umeed-orange-100)`,
+                      backgroundColor: checked ? 'var(--umeed-orange-100)' : 'white',
+                      color: 'var(--umeed-ink-900)',
+                      transition: 'all 300ms',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!checked) {
+                        e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!checked) {
+                        e.currentTarget.style.backgroundColor = 'white';
+                      }
+                    }}
+                  >
+                    <div style={{
+                      fontWeight: 700,
+                      fontSize: '16px',
+                      marginBottom: '4px',
+                    }}>
+                      {option.label}
+                    </div>
+                    <div style={{
+                      fontSize: '14px',
+                      color: 'var(--umeed-ink-500)',
+                    }}>
+                      {option.description}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+
             <button
-              onClick={handleContinue}
-              disabled={loading}
-              className="mt-8 bg-accent-500 hover:bg-accent-600 disabled:bg-gray-400 text-white font-semibold py-3 px-8 rounded-lg transition-colors w-full"
+              onClick={() => setStep('topics')}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                borderRadius: '9999px',
+                backgroundColor: 'white',
+                color: 'var(--umeed-ink-900)',
+                border: `1px solid var(--umeed-orange-100)`,
+                fontWeight: 700,
+                fontSize: '16px',
+                cursor: 'pointer',
+                transition: 'all 300ms',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+              }}
             >
-              {loading ? 'Saving...' : 'Complete'}
+              Back
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {step === 'complete' && (
-          <div className="text-center">
-            <div className="text-5xl mb-4">✨</div>
-            <h2 className="text-2xl font-bold text-primary-900 mb-4">
+      {step === 'languages' && (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          paddingLeft: '20px',
+          paddingRight: '20px',
+        }}>
+          <div style={{
+            maxWidth: '500px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            width: '100%',
+          }}>
+            <h1 style={{
+              fontSize: '44px',
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontWeight: 700,
+              color: 'var(--umeed-ink-900)',
+              margin: '0 0 12px 0',
+            }}>
+              Preferred language
+            </h1>
+            <p style={{
+              fontSize: '16px',
+              color: 'var(--umeed-ink-500)',
+              marginBottom: '32px',
+            }}>
+              Select the language you'd like us to use when possible.
+            </p>
+
+            <div style={{ marginBottom: '32px' }}>
+              <label htmlFor="language-select" style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: 700,
+                color: 'var(--umeed-ink-900)',
+                marginBottom: '8px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                Language
+              </label>
+              <select
+                id="language-select"
+                value={preferences.languages?.[0] || 'en'}
+                onChange={(e) => handleLanguageChange(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: `1px solid var(--umeed-orange-100)`,
+                  backgroundColor: 'white',
+                  color: 'var(--umeed-ink-900)',
+                  fontSize: '16px',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  outline: 'none',
+                  transition: 'all 300ms',
+                  cursor: 'pointer',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--umeed-orange-100)';
+                }}
+              >
+                {LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+            }}>
+              <button
+                onClick={() => setStep('support-style')}
+                style={{
+                  flex: 1,
+                  padding: '14px 24px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'white',
+                  color: 'var(--umeed-ink-900)',
+                  border: `1px solid var(--umeed-orange-100)`,
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 300ms',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'white';
+                }}
+              >
+                Back
+              </button>
+              <button
+                onClick={handleComplete}
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  padding: '14px 24px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'var(--umeed-orange-500)',
+                  color: 'white',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 300ms',
+                  opacity: loading ? 0.7 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = 'var(--umeed-orange-700)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--umeed-orange-500)';
+                }}
+              >
+                {loading ? 'Saving...' : 'Complete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {step === 'complete' && (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingLeft: '20px',
+          paddingRight: '20px',
+        }}>
+          <div style={{
+            textAlign: 'center',
+          }}>
+            <h1 style={{
+              fontSize: '44px',
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontWeight: 700,
+              color: 'var(--umeed-ink-900)',
+              margin: '0 0 12px 0',
+            }}>
               All set!
-            </h2>
-            <p className="text-gray-600 mb-8">
+            </h1>
+            <p style={{
+              fontSize: '18px',
+              color: 'var(--umeed-ink-500)',
+              margin: '0 0 16px 0',
+              lineHeight: 1.6,
+            }}>
               Your preferences have been saved. Let's get started.
             </p>
-            <p className="text-sm text-gray-500">
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--umeed-ink-500)',
+              margin: 0,
+            }}>
               Redirecting to chat...
             </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

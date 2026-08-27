@@ -28,11 +28,20 @@ The service maintains two lists of patterns:
 
 A message is flagged as crisis if:
 - ✅ It matches a HIGH-SEVERITY pattern (single match = escalate)
-- ✅ It matches 2+ WARNING patterns (suggests multiple distress signals)
+- ✅ It matches a WARNING pattern (single match = escalate) — **except** two
+  patterns ("can't do this / can't handle this", "it's too much") that are
+  common in ordinary, non-crisis venting ("I can't handle this deadline").
+  Those two only escalate when corroborated by a matched pattern *outside*
+  that pair — matching both of them together (as in "I can't handle this,
+  it's too much") is not enough on its own, since that combination was
+  previously causing crisis warnings on ordinary chat messages. The semantic
+  classifier (`crisisClassifierService.ts`) still runs on every message and
+  can independently flag this combination as "ambiguous," surfacing
+  resources with gentler framing rather than an urgent alert.
 
 Confidence score ranges 0–1:
 - HIGH match = 0.95 confidence
-- Multiple WARNING matches = 0.70 confidence
+- WARNING match(es) = 0.70 confidence
 - No matches = 0.0 confidence
 
 ## Test Cases

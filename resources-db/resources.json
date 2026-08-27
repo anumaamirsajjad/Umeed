@@ -9,6 +9,7 @@
     "web": "https://988lifeline.org",
     "languages": ["en", "es"],
     "availability": "24/7",
+    "contexts": ["professional", "solo"],
     "description": "Call or text 988 for free, confidential support. Available 24/7/365."
   },
   {
@@ -21,6 +22,7 @@
     "web": "https://suicideprevention.ca",
     "languages": ["en", "fr"],
     "availability": "24/7",
+    "contexts": ["professional", "solo"],
     "description": "Free, confidential support available 24/7. Also offers text and chat services."
   },
   {
@@ -33,6 +35,7 @@
     "web": "https://www.samaritans.org",
     "languages": ["en"],
     "availability": "24/7",
+    "contexts": ["professional", "solo"],
     "description": "Available 24/7 to provide emotional support. Also offers email and live chat."
   },
   {
@@ -45,6 +48,7 @@
     "web": "https://www.lifeline.org.au",
     "languages": ["en"],
     "availability": "24/7",
+    "contexts": ["professional", "solo"],
     "description": "Free, confidential support 24/7. Also offers online chat and crisis text."
   },
   {
@@ -57,6 +61,7 @@
     "web": "https://aasra.info",
     "languages": ["en", "hi"],
     "availability": "24/7",
+    "contexts": ["professional"],
     "description": "24/7 crisis intervention and suicide prevention service for India."
   },
   {
@@ -69,6 +74,7 @@
     "web": "https://www.gob.mx/salud/acciones-y-programas/saptel-sistema-nacional-de-apoyo-psicosocial-por-telefono",
     "languages": ["es"],
     "availability": "24/7",
+    "contexts": ["professional"],
     "description": "Free, anonymous psychological support available 24/7 in Mexico."
   },
   {
@@ -81,6 +87,7 @@
     "web": "https://www.cvv.org.br",
     "languages": ["pt"],
     "availability": "24/7",
+    "contexts": ["professional"],
     "description": "Free suicide prevention and crisis support service available 24/7."
   },
   {
@@ -93,6 +100,7 @@
     "web": "https://lifelinesa.org.za",
     "languages": ["en", "zu", "xh"],
     "availability": "24/7",
+    "contexts": ["professional"],
     "description": "24/7 crisis support, suicide prevention, and counseling referrals."
   },
   {
@@ -105,6 +113,7 @@
     "web": "https://www.inochinodenwa.org",
     "languages": ["ja"],
     "availability": "24/7",
+    "contexts": ["professional"],
     "description": "Suicide prevention and crisis support hotline operating 24/7."
   },
   {
@@ -116,6 +125,7 @@
     "web": "https://findahelpline.com",
     "languages": ["en", "es", "fr", "de", "it", "pt", "nl", "pl", "ru", "ja", "ko", "zh", "ar", "hi"],
     "availability": "24/7",
+    "contexts": ["solo"],
     "description": "International directory of crisis helplines in 190+ countries. Search by location and crisis type."
   },
   {
@@ -127,6 +137,7 @@
     "web": "https://www.iasp.info/resources/Crisis_Centres/",
     "languages": ["en"],
     "availability": "24/7",
+    "contexts": ["solo"],
     "description": "Comprehensive global directory of crisis prevention services and resources."
   },
   {
@@ -138,7 +149,74 @@
     "web": "https://www.nami.org",
     "languages": ["en"],
     "availability": "specific_times",
+    "contexts": ["family_community", "mixed"],
     "description": "Support groups, education, and mental health resources. Check website for meeting times and virtual options."
+  },
+  {
+    "id": "pk-karachi-karwan-e-hayat",
+    "name": "Karwan-e-Hayat",
+    "type": "professional",
+    "region": "south-asia",
+    "country": "Pakistan",
+    "city": "Karachi",
+    "languages": ["en", "ur"],
+    "availability": "business_hours",
+    "contexts": ["professional"],
+    "description": "Psychiatric care and rehabilitation organization based in Karachi. NEEDS VERIFICATION — contact details (phone/website) have not been confirmed; do not ship without verifying with the organization directly.",
+    "verified": false
+  },
+  {
+    "id": "pk-lahore-fountain-house",
+    "name": "Fountain House",
+    "type": "professional",
+    "region": "south-asia",
+    "country": "Pakistan",
+    "city": "Lahore",
+    "languages": ["en", "ur"],
+    "availability": "business_hours",
+    "contexts": ["professional"],
+    "description": "Long-established psychiatric rehabilitation center in Lahore. NEEDS VERIFICATION — contact details (phone/website) have not been confirmed; do not ship without verifying with the organization directly.",
+    "verified": false
+  },
+  {
+    "id": "pk-lahore-taskeen",
+    "name": "Taskeen Helpline",
+    "type": "professional",
+    "region": "south-asia",
+    "country": "Pakistan",
+    "city": "Lahore",
+    "phone": "042-35761999",
+    "languages": ["en", "ur"],
+    "availability": "business_hours",
+    "contexts": ["professional"],
+    "description": "Lahore-based NGO offering mental health awareness and counseling services.",
+    "verified": true
+  },
+  {
+    "id": "pk-rozan-helpline",
+    "name": "Rozan Helpline",
+    "type": "crisis_hotline",
+    "region": "south-asia",
+    "country": "Pakistan",
+    "phone": "0800-111-00",
+    "languages": ["en", "ur"],
+    "availability": "24/7",
+    "contexts": ["professional", "family_community"],
+    "description": "National toll-free helpline offering confidential counseling and crisis intervention for mental health concerns.",
+    "verified": true
+  },
+  {
+    "id": "pk-umang-helpline",
+    "name": "Umang Helpline",
+    "type": "crisis_hotline",
+    "region": "south-asia",
+    "country": "Pakistan",
+    "phone": "0311-7786264",
+    "languages": ["en", "ur"],
+    "availability": "24/7",
+    "contexts": ["professional", "solo"],
+    "description": "Provides psychological support, suicide prevention counseling, and referrals.",
+    "verified": true
   },
   {
     "id": "us-nfcc",
@@ -150,6 +228,7 @@
     "web": "https://www.nfcc.org",
     "languages": ["en"],
     "availability": "business_hours",
+    "contexts": ["professional"],
     "description": "Financial counseling and support to help reduce financial stress and anxiety."
   }
 ]

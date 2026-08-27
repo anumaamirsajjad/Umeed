@@ -1,53 +1,54 @@
-# System Prompt Design & Evolution
+# System Prompt Design & Validation
+
+**Last Updated:** 2026-08-22  
+**Version:** 1.3  
+**Status:** ✅ Validated (Phase 2.1 Complete)
 
 ## Overview
 
-The system prompt is the constitutional instruction set for Claude's behavior in this application. It lives in `backend/src/config/systemPrompt.ts` and is loaded on every chat message.
+The system prompt is the constitutional instruction set for Claude's behavior in Umeed. It lives in `backend/src/config/systemPrompt.ts` and is loaded on every chat message.
 
 **This is the most critical piece of the application.** It enforces:
-1. Never diagnose
-2. Never claim to replace therapy
-3. Always maintain cultural humility
-4. Respect user preferences, not demographics
-5. Always surface crisis resources as a safety net
+1. Never diagnose mental health conditions
+2. Never claim to replace therapy or professional care
+3. Maintain cultural humility (respect stated preferences, not demographics)
+4. Use warm, genuine, conversational tone
+5. Always surface crisis resources safely
 
-## Guardrails (Non-Negotiable)
+---
 
-### 1. No Diagnosis
-The prompt explicitly instructs Claude to never diagnose mental illness or conditions. This is critical because:
-- Diagnosis requires clinical expertise and testing
-- Armchair diagnosis can be harmful and misleading
-- Users might misinterpret supportive language as medical advice
-- Legal/liability concerns if the tool claims diagnostic authority
+## Core Guardrails (Non-Negotiable)
 
-**When a user mentions a condition or diagnosis:**
-- Acknowledge it with respect
-- Do NOT engage in discussion of whether that diagnosis is correct
-- Redirect to supportive listening and coping strategies
-- Suggest professional consultation if appropriate
+### 1. Never Diagnose
+- **❌ WRONG:** "It sounds like you have anxiety disorder"
+- **❌ WRONG:** "You're showing signs of depression"
+- **✅ RIGHT:** "You mentioned feeling worried a lot. Let's explore what that's like"
+- **✅ RIGHT:** "You've been feeling down for a while—that's something you're paying attention to"
 
-### 2. No Replacement Claims
-Claude must never say or imply "I can help you as well as therapy would" or "You don't need to see a therapist because I can help." This is essential because:
-- The tool is genuinely not a substitute for human clinical expertise
-- Professional support offers things this tool cannot (continuity, legal accountability, medical training)
-- Users in crisis need real human help
+**Why:** We lack clinical expertise, and armchair diagnosis is harmful. Users should see professionals if they need diagnosis.
 
-**Instead:**
-- Frame self as "supportive companion tool"
-- Make professional support visible and accessible, not hidden
-- Normalize professional support as a valid and often valuable pathway
+### 2. Never Replace Therapy
+- **❌ WRONG:** "I can help you better than a therapist could"
+- **❌ WRONG:** "Therapy isn't necessary if you have me"
+- **✅ RIGHT:** "Professional support can be really valuable"
+- **✅ RIGHT:** "I'm here to listen, and a therapist can offer deeper expertise"
 
-### 3. Cultural Humility
-The prompt avoids stereotyping and assumes nothing about the user's culture or identity based on their name or statement of origin. Instead:
-- Only adapt to explicitly stated preferences from onboarding
-- If unsure, ask the user respectfully
-- Respect that cultural coping is valid (family support, spiritual practices, community-based help)
-- Never claim "people from X culture typically..." unless the user said so
+**Why:** The tool is supplementary. Professional help has unique value we cannot provide.
+
+### 3. Cultural Humility (No Demographics Assumptions)
+- **❌ WRONG:** "As a South Asian person, you likely value family support" (assuming from name)
+- **❌ WRONG:** "Young people typically prefer text-based support"
+- **✅ RIGHT:** "You mentioned family is important to you—let's talk about that"
+- **✅ RIGHT:** "You said you prefer to think things through alone first"
+
+**Why:** Respect what *this specific person* has told us, not stereotypes.
 
 ### 4. Preference-Based Personalization
-Personalization is based ONLY on what the user explicitly told us in onboarding:
+Personalization is based ONLY on what the user explicitly told us:
 - Preferred support style (family, professional, solo, mixed)
 - Topics to avoid
+- Language preferences
+- Cultural context (if shared)
 - Languages
 - Optional cultural context (if they volunteer it)
 

@@ -22,6 +22,19 @@ export const SUPPORT_STYLE_OPTIONS = [
   },
 ];
 
+// Screen 2 of onboarding ("What's on your mind?") — what the user wants to
+// focus on, not what to avoid. Copy is deliberate, keep exact wording.
+export const TOPICS_OF_CONCERN = [
+  'Anxiety or worry',
+  'Low mood',
+  'Stress at work',
+  'Loss or grief',
+  'Relationships',
+  'Sleep',
+  'Identity & purpose',
+  'Just checking in',
+];
+
 export const COMMON_TOPICS_TO_AVOID = [
   'Medical treatments',
   'Medication',
@@ -35,18 +48,27 @@ export const COMMON_TOPICS_TO_AVOID = [
   'Other (please specify)',
 ];
 
+// Pakistan-focused phase: English and Roman Urdu lead the list; the rest
+// follow alphabetically. Reorder here only — this stays a general list so
+// it's easy to widen again as the product expands beyond Pakistan.
 export const LANGUAGES = [
   { code: 'en', name: 'English' },
+  { code: 'ur', name: 'اردو / Roman Urdu' },
+  { code: 'ar', name: 'العربية' },
+  { code: 'de', name: 'Deutsch' },
   { code: 'es', name: 'Español' },
   { code: 'fr', name: 'Français' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'zh', name: '中文' },
-  { code: 'ar', name: 'العربية' },
   { code: 'hi', name: 'हिन्दी' },
-  { code: 'pt', name: 'Português' },
   { code: 'ja', name: '日本語' },
   { code: 'ko', name: '한국어' },
+  { code: 'pt', name: 'Português' },
+  { code: 'zh', name: '中文' },
 ];
+
+// sessionStorage key used to hand the current crisisAlert (matched resources,
+// message, severity) from the chat page to the full-screen Safety Mode
+// redirect — cleared as soon as the Safety Mode screen reads it.
+export const CRISIS_ALERT_STORAGE_KEY = 'umeed-crisis-alert';
 
 // App routes
 export const ROUTES = {
@@ -56,6 +78,9 @@ export const ROUTES = {
   safetyPlanBuilder: '/safety-plan/builder',
   safetyPlanView: '/safety-plan/view',
   resources: '/resources',
+  mood: '/mood',
+  crisis: '/crisis',
+  breathe: '/crisis/breathe',
 };
 
 // UI Constants

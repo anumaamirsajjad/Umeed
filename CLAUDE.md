@@ -110,5 +110,9 @@ Env vars: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `NEXT_PUBLIC_API_URL`
 
 ---
 
-**Last updated:** 2026-08-21  
-**Next session focus:** [To be filled in during work]
+**Last updated:** 2026-08-23  
+**Next session focus:** Phase 6 (testing/security/docs) is done. `npm run test:crisis-classifier`
+(20 PASS/1 WARN/2 FAIL of 23) and `npm run test:system-prompt` (8/8, avg 4.00/5) have both been
+run — see `COMPLETE_IMPLEMENTATION_PLAN.md` Phase 6 summary for details and the two classifier
+misses worth investigating. What's left: manually click through the app on mobile + with a
+screen reader, and deployment (Vercel + Render/Railway) — see `docs/DEPLOYMENT.md`.

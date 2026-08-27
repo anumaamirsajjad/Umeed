@@ -1,8 +1,17 @@
 import type { Metadata } from 'next';
+import { Inter, Fraunces, Noto_Nastaliq_Urdu } from 'next/font/google';
 import './globals.css';
+import { THEME_INIT_SCRIPT } from '@/lib/theme';
+import { AuthProvider } from '@/lib/authContext';
+import { MoonToggle } from '@/components/common/MoonToggle';
+import { SidebarNav } from '@/components/common/SidebarNav';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const fraunces = Fraunces({ subsets: ['latin'], weight: ['400', '600', '700'], variable: '--font-fraunces', display: 'swap' });
+const nastaliq = Noto_Nastaliq_Urdu({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-nastaliq', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Cultural Context-Aware Mental Health First Aid',
+  title: 'Umeed',
   description: 'A supportive companion for mental wellbeing',
 };
 
@@ -12,15 +21,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-gradient-to-br from-primary-50 to-accent-50 text-gray-900">
-        <div className="min-h-screen flex flex-col">
-          {/* Header/Navigation will go here */}
-          <main className="flex-1">
-            {children}
-          </main>
-          {/* Footer will go here */}
-        </div>
+    <html lang="en" className={`${inter.variable} ${fraunces.variable} ${nastaliq.variable}`}>
+      <head>
+        {/* Runs before paint to set the theme class and avoid a flash of the wrong theme. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body style={{ backgroundColor: 'var(--umeed-beige-50)', color: 'var(--umeed-ink-900)' }}>
+        <AuthProvider>
+          <SidebarNav />
+          <div className="min-h-screen flex flex-col ml-20">
+            <MoonToggle />
+            <main className="flex-1">
+              {children}
+            </main>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

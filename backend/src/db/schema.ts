@@ -6,6 +6,15 @@
  */
 
 export const SCHEMA_SQL = `
+-- Users (authentication)
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- User Preferences (from onboarding)
 CREATE TABLE IF NOT EXISTS user_preferences (
   id TEXT PRIMARY KEY,
@@ -46,14 +55,53 @@ CREATE TABLE IF NOT EXISTS crisis_resources (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Mood Check-ins
+CREATE TABLE IF NOT EXISTS mood_checkins (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  mood_score INTEGER NOT NULL CHECK (mood_score BETWEEN 1 AND 5),
+  mood_emoji TEXT,
+  timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User Patterns (living profile / pattern detection)
+CREATE TABLE IF NOT EXISTS user_patterns (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  pattern_text TEXT NOT NULL,
+  pattern_type TEXT,
+  confidence REAL,
+  evidence TEXT, -- JSON array
+  first_detected TIMESTAMP,
+  last_mentioned TIMESTAMP,
+  frequency INTEGER
+);
+
 -- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences(user_id);
 CREATE INDEX IF NOT EXISTS idx_safety_plans_user_id ON safety_plans(user_id);
 CREATE INDEX IF NOT EXISTS idx_crisis_resources_region ON crisis_resources(region);
 CREATE INDEX IF NOT EXISTS idx_crisis_resources_type ON crisis_resources(type);
+CREATE INDEX IF NOT EXISTS idx_mood_checkins_user_id ON mood_checkins(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_patterns_user_id ON user_patterns(user_id);
 `;
 
+// NOTE: This schema documents the intended relational shape. The current MVP
+// persistence layer (backend/src/db/jsonStore.ts) stores these same tables as
+// flat JSON files instead of executing this SQL - see safety_plans, mood_checkins,
+// and user_patterns records under backend/data/. Swap in a real SQL engine against
+// this schema when moving past the hackathon MVP.
+
 // Type definitions for database rows
+export interface UserRow {
+  id: string;
+  email: string;
+  password_hash: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UserPreferencesRow {
   id: string;
   user_id: string;

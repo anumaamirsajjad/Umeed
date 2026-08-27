@@ -8,6 +8,9 @@ export const env = {
   // API Keys
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
 
+  // Crisis classifier — cheap/fast model, runs on every message in parallel with the main reply
+  CRISIS_CLASSIFIER_MODEL: process.env.CRISIS_CLASSIFIER_MODEL || 'meta-llama/llama-3.1-8b-instruct',
+
   // Database
   DATABASE_URL: process.env.DATABASE_URL || 'sqlite:data/rescue.db',
 

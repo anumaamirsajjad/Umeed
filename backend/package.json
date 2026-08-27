@@ -10,26 +10,33 @@
     "lint": "eslint src",
     "type-check": "tsc --noEmit",
     "db:migrate": "ts-node src/db/runMigrations.ts",
-    "db:seed": "ts-node src/db/seed.ts"
+    "db:seed": "ts-node src/db/seed.ts",
+    "test:crisis-classifier": "node --loader ts-node/esm --experimental-specifier-resolution=node src/tests/crisisClassifier.test.ts",
+    "test:crisis-detection": "node --loader ts-node/esm --experimental-specifier-resolution=node src/tests/crisisDetection.test.ts",
+    "test:system-prompt": "node --loader ts-node/esm --experimental-specifier-resolution=node src/tests/systemPromptValidation.test.ts",
+    "test": "npm run test:crisis-detection && npm run test:crisis-classifier && npm run test:system-prompt"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@anthropic-ai/sdk": "^0.24.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "axios": "^1.6.5",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "@anthropic-ai/sdk": "^0.24.0",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.3",
+    "pdf-lib": "^1.17.1",
     "pg": "^8.11.3",
-    "sqlite3": "^5.1.6",
-    "better-sqlite3": "^9.2.2",
-    "axios": "^1.6.5"
+    "sql.js": "^1.10.3"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "@types/node": "^20.10.6",
-    "@types/express": "^4.17.21",
     "@types/cors": "^2.8.17",
-    "ts-node": "^10.9.2",
-    "eslint": "^8.56.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.6",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
-    "@typescript-eslint/parser": "^6.17.0"
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   }
 }

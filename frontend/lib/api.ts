@@ -5,7 +5,10 @@ import type {
   UserPreferences,
   OnboardingResponse,
   SafetyPlan,
+  SafetyPlanDraft,
   CrisisResource,
+  MoodTrendResponse,
+  ResourcesResponse,
 } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -17,6 +20,15 @@ const client: AxiosInstance = axios.create({
   },
 });
 
+// Add auth token to every request
+client.interceptors.request.use((config) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Health check
 export const health = async (): Promise<{ status: string }> => {
   const { data } = await client.get('/health');
@@ -24,40 +36,39 @@ export const health = async (): Promise<{ status: string }> => {
 };
 
 // Chat endpoints
-export const sendMessage = async (req: ChatRequest): Promise<ChatResponse> => {
+export const sendMessage = async (req: Omit<ChatRequest, 'userId'>): Promise<ChatResponse> => {
   const { data } = await client.post('/chat', req);
   return data;
 };
 
+export const startNewChat = async (): Promise<void> => {
+  await client.post('/chat/new', {});
+};
+
 // Onboarding endpoints
 export const savePreferences = async (
-  userId: string,
   preferences: Partial<UserPreferences>
 ): Promise<OnboardingResponse> => {
-  const { data } = await client.post('/onboarding/preferences', {
-    userId,
-    ...preferences,
-  });
+  const { data } = await client.post('/onboarding/preferences', preferences);
   return data;
 };
 
-export const getPreferences = async (userId: string): Promise<UserPreferences> => {
-  const { data } = await client.get(`/onboarding/preferences/${userId}`);
+export const getPreferences = async (): Promise<UserPreferences> => {
+  const { data } = await client.get('/onboarding/preferences');
   return data;
 };
 
 // Safety plan endpoints
 export const saveSafetyPlan = async (
-  userId: string,
   plan: Partial<SafetyPlan>
 ): Promise<SafetyPlan> => {
-  const { data } = await client.post('/safety-plan', { userId, ...plan });
+  const { data } = await client.post('/safety-plan', plan);
   return data;
 };
 
-export const getSafetyPlan = async (userId: string): Promise<SafetyPlan | null> => {
+export const getSafetyPlan = async (): Promise<SafetyPlan | null> => {
   try {
-    const { data } = await client.get(`/safety-plan/${userId}`);
+    const { data } = await client.get('/safety-plan');
     return data;
   } catch (error) {
     // 404 = no plan yet
@@ -65,10 +76,33 @@ export const getSafetyPlan = async (userId: string): Promise<SafetyPlan | null> 
   }
 };
 
-export const exportSafetyPlanPDF = async (userId: string): Promise<Blob> => {
-  const { data } = await client.get(`/safety-plan/${userId}/export`, {
+export const exportSafetyPlanPDF = async (): Promise<Blob> => {
+  const { data } = await client.get('/safety-plan/export', {
     responseType: 'blob',
   });
+  return data;
+};
+
+export const getSafetyPlanSuggestions = async (): Promise<SafetyPlanDraft> => {
+  const { data } = await client.get('/safety-plan/suggestions');
+  return data;
+};
+
+// Mood tracking endpoints
+export const submitMoodCheckin = async (
+  moodScore: number,
+  moodEmoji: string
+): Promise<void> => {
+  await client.post('/mood/checkin', { moodScore, moodEmoji });
+};
+
+export const getMoodTrend = async (days = 7): Promise<MoodTrendResponse> => {
+  const { data } = await client.get('/mood/trend', { params: { days } });
+  return data;
+};
+
+export const getMoodCheckinStatus = async (): Promise<{ checkedInToday: boolean }> => {
+  const { data } = await client.get('/mood/status');
   return data;
 };
 
@@ -76,8 +110,10 @@ export const exportSafetyPlanPDF = async (userId: string): Promise<Blob> => {
 export const getResources = async (filters?: {
   region?: string;
   country?: string;
+  city?: string;
   type?: string;
-}): Promise<CrisisResource[]> => {
+  userId?: string;
+}): Promise<ResourcesResponse> => {
   const { data } = await client.get('/resources', { params: filters });
   return data;
 };
