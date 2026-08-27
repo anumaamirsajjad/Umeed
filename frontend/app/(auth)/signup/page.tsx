@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/lib/authContext';
 
 export default function SignupPage() {
@@ -43,8 +44,17 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/logo.jpg"
+            alt="Umeed Logo"
+            width={100}
+            height={100}
+            className="rounded-lg"
+          />
+        </div>
         <h1 className="text-3xl font-bold text-center text-slate-900 mb-2">Create Account</h1>
-        <p className="text-center text-slate-600 mb-8">Start your mental health journey</p>
+        <p className="text-center text-slate-600 mb-8">Start your mental health journey with Umeed</p>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
