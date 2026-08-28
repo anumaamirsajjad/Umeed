@@ -263,7 +263,6 @@ export default function CrisisSafetyModePage() {
         <Link
           href={ROUTES.resources}
           style={{
-            display: 'block',
             textAlign: 'center',
             padding: '16px 24px',
             backgroundColor: 'white',

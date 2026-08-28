@@ -97,7 +97,7 @@ export default function SafetyPlanBuilder() {
       return;
     }
 
-    getSafetyPlan(userId)
+    getSafetyPlan()
       .then((existing) => {
         if (existing) setPlan({ ...EMPTY_PLAN, ...existing });
       })
@@ -114,7 +114,7 @@ export default function SafetyPlanBuilder() {
           reasonsToStaySafe: planToSave.reasonsToStaySafe.map((s) => s.trim()).filter(Boolean),
           environmentSafetySteps: planToSave.environmentSafetySteps.map((s) => s.trim()).filter(Boolean),
         };
-        const saved = await saveSafetyPlan(userId, sanitized);
+        const saved = await saveSafetyPlan(sanitized);
         setPlan(saved);
         return saved;
       } catch (error) {
@@ -154,7 +154,7 @@ export default function SafetyPlanBuilder() {
     setSuggesting(true);
     setStatusMessage(null);
     try {
-      const suggestions = await getSafetyPlanSuggestions(userId);
+      const suggestions = await getSafetyPlanSuggestions();
       const dedupe = (existing: string[], incoming: string[]) => Array.from(new Set([...existing, ...incoming]));
 
       switch (step.key) {
@@ -286,8 +286,6 @@ export default function SafetyPlanBuilder() {
         paddingTop: '40px',
         paddingBottom: '40px',
         position: 'relative',
-        marginLeft: '40px',
-        marginRight: '40px',
       }}>
         {/* Spine lines */}
         <div style={{

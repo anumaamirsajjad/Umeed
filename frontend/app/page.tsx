@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { ROUTES } from '@/lib/constants';
 
 export default function Home() {
   const heroRef = useRef<HTMLDivElement>(null);
-  const chaptersRef = useRef<(HTMLDivElement | null)[]>([]);
+  const chaptersRef = useRef<(HTMLElement | null)[]>([]);
 
   useEffect(() => {
     // Add animation styles to head
@@ -25,6 +26,15 @@ export default function Home() {
           }
         }
 
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
+        }
+
         .hero-headline {
           animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s backwards;
         }
@@ -37,6 +47,10 @@ export default function Home() {
           animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.5s backwards;
         }
 
+        .scroll-indicator {
+          animation: bounce 2s infinite;
+        }
+
         .chapter-visible {
           animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
@@ -45,7 +59,8 @@ export default function Home() {
           .hero-headline,
           .hero-subline,
           .hero-description,
-          .chapter-visible {
+          .chapter-visible,
+          .scroll-indicator {
             animation: none;
             opacity: 1;
             transform: none;
@@ -100,7 +115,65 @@ export default function Home() {
   ];
 
   return (
-    <div style={{ backgroundColor: 'var(--umeed-beige-50)', minHeight: '100vh', paddingLeft: '80px' }}>
+    <div style={{ backgroundColor: 'var(--umeed-beige-50)', minHeight: '100vh' }}>
+      {/* Header with Logo and Signup */}
+      <header style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '20px 40px',
+        borderBottom: '1px solid var(--umeed-orange-200)',
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        backdropFilter: 'blur(10px)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+      }}>
+        <Link href={ROUTES.home} style={{
+          textDecoration: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+        }}>
+          <Image
+            src="/logo.jpg"
+            alt="Umeed Logo"
+            width={40}
+            height={40}
+            style={{ borderRadius: '8px' }}
+          />
+          <span style={{
+            fontSize: '24px',
+            fontWeight: 700,
+            color: 'var(--umeed-ink-900)',
+            fontFamily: "'Fraunces', Georgia, serif",
+          }}>
+            Umeed
+          </span>
+        </Link>
+        <Link href={ROUTES.signup} style={{
+          backgroundColor: 'var(--umeed-orange-500)',
+          color: 'white',
+          padding: '12px 28px',
+          borderRadius: '9999px',
+          fontWeight: 700,
+          fontSize: '14px',
+          textDecoration: 'none',
+          transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
+          boxShadow: '0 4px 12px rgba(244, 107, 31, 0.2)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.05)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(244, 107, 31, 0.3)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(244, 107, 31, 0.2)';
+        }}>
+          Sign Up
+        </Link>
+      </header>
+
       {/* Hero Section */}
       <section
         ref={heroRef}
@@ -113,6 +186,7 @@ export default function Home() {
           paddingBottom: '80px',
           paddingLeft: '40px',
           paddingRight: '40px',
+          position: 'relative',
         }}
       >
         <div style={{ maxWidth: '900px' }}>
@@ -123,7 +197,6 @@ export default function Home() {
             color: 'var(--umeed-ink-900)',
             marginBottom: '0px',
             lineHeight: 1.2,
-            opacity: 0,
           }}>
             Umeed
           </h1>
@@ -134,7 +207,6 @@ export default function Home() {
             color: 'var(--umeed-orange-500)',
             marginBottom: '32px',
             lineHeight: 1.8,
-            opacity: 0,
           }}>
             امید سے بات کریں
           </p>
@@ -144,10 +216,35 @@ export default function Home() {
             marginBottom: '32px',
             maxWidth: '600px',
             lineHeight: 1.6,
-            opacity: 0,
           }}>
             A warm, judgment-free space to talk about what is on your mind — adapted to how you prefer support. Not a replacement for professional care, but a steady companion during difficult moments.
           </p>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div style={{
+          position: 'absolute',
+          bottom: '40px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          textAlign: 'center',
+        }}>
+          <p style={{
+            fontSize: '12px',
+            color: 'var(--umeed-ink-400)',
+            marginBottom: '12px',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            fontWeight: 600,
+          }}>
+            Scroll to explore
+          </p>
+          <div className="scroll-indicator" style={{
+            fontSize: '20px',
+            color: 'var(--umeed-orange-400)',
+          }}>
+            ↓
+          </div>
         </div>
       </section>
 

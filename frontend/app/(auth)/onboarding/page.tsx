@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { savePreferences } from '@/lib/api';
+import { savePreferences, checkOnboardingStatus } from '@/lib/api';
 import type { UserPreferences } from '@/lib/types';
 import {
   SUPPORT_STYLE_OPTIONS,
@@ -11,7 +11,7 @@ import {
   ROUTES,
 } from '@/lib/constants';
 
-type Step = 'name' | 'topics' | 'support-style' | 'languages' | 'complete';
+type Step = 'name' | 'topics' | 'support-style' | 'languages' | 'complete' | 'redirect';
 
 const STEP_NUMBER: Record<Step, number> = {
   name: 1,
@@ -19,12 +19,13 @@ const STEP_NUMBER: Record<Step, number> = {
   'support-style': 3,
   languages: 4,
   complete: 4,
+  redirect: 0,
 };
 const TOTAL_STEPS = 4;
 
 export default function Onboarding() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>('name');
+  const [step, setStep] = useState<Step>('redirect');
   const [loading, setLoading] = useState(false);
   const [userId] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -36,6 +37,27 @@ export default function Onboarding() {
     }
     return '';
   });
+
+  // Check if user has already completed onboarding
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const status = await checkOnboardingStatus();
+        if (status.completed) {
+          // User has completed onboarding, skip to chat
+          router.push(ROUTES.chat);
+        } else {
+          // User hasn't completed onboarding, show the first step
+          setStep('name');
+        }
+      } catch (err) {
+        // If API fails, start onboarding (could be first-time user)
+        setStep('name');
+      }
+    };
+
+    checkStatus();
+  }, [router]);
 
   const [preferences, setPreferences] = useState<Partial<UserPreferences>>({
     name: '',
@@ -65,7 +87,7 @@ export default function Onboarding() {
   const handleComplete = async () => {
     setLoading(true);
     try {
-      await savePreferences(userId, preferences);
+      await savePreferences(preferences);
       setStep('complete');
       setTimeout(() => {
         router.push(ROUTES.chat);
@@ -86,8 +108,39 @@ export default function Onboarding() {
       minHeight: '100vh',
       backgroundColor: 'var(--umeed-beige-50)',
     }}>
+      {/* Loading/Redirect state */}
+      {step === 'redirect' && (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            textAlign: 'center',
+          }}>
+            <h1 style={{
+              fontSize: '44px',
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontWeight: 700,
+              color: 'var(--umeed-ink-900)',
+              margin: '0 0 12px 0',
+            }}>
+              Welcome back
+            </h1>
+            <p style={{
+              fontSize: '18px',
+              color: 'var(--umeed-ink-500)',
+              margin: 0,
+            }}>
+              Loading your preferences...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Progress bar */}
-      {step !== 'complete' && (
+      {step !== 'complete' && step !== 'redirect' && (
         <div style={{
           height: '4px',
           backgroundColor: 'var(--umeed-orange-100)',

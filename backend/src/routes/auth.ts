@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
-import { signup, login } from '../services/authService.js';
+import { signup, login, resetPassword, verifyToken } from '../services/authService.js';
+import { requireAuth } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -68,7 +69,6 @@ router.post('/verify', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Token is required' });
   }
 
-  const { verifyToken } = require('../services/authService.js');
   const payload = verifyToken(token);
 
   if (!payload) {
@@ -79,6 +79,42 @@ router.post('/verify', (req: Request, res: Response) => {
     success: true,
     payload,
   });
+});
+
+/**
+ * POST /auth/password-reset
+ * Reset user password with current password verification
+ * Requires authentication header
+ */
+router.post('/password-reset', requireAuth, async (req: Request & any, res: Response) => {
+  const userId = req.user?.userId;
+  const { currentPassword, newPassword } = req.body;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current password and new password are required' });
+  }
+
+  try {
+    const result = await resetPassword(userId, currentPassword, newPassword);
+
+    if ('error' in result) {
+      return res.status(400).json(result);
+    }
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to reset password',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
 });
 
 export default router;

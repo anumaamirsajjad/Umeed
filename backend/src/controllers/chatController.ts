@@ -105,7 +105,8 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
     }
 
     // Combine both independent safety layers — either one flagging is enough to escalate
-    const classifierEscalates = classification.riskLevel !== 'none';
+    // Only escalate on ACUTE classifier signals (not ambiguous/failsafe)
+    const classifierEscalates = classification.riskLevel === 'acute';
     const isCrisis = crisisResult.isCrisis || classifierEscalates;
     const isAcute = classification.riskLevel === 'acute' || crisisResult.severity === 'critical';
     const severity: 'high' | 'critical' | undefined = isCrisis ? (isAcute ? 'critical' : 'high') : undefined;

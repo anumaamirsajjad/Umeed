@@ -93,7 +93,7 @@ export default function MoodTrendPage() {
       return;
     }
 
-    getMoodTrend(userId, 7)
+    getMoodTrend(7)
       .then((trend) => {
         setData(trend.data);
         setAverage(trend.average);

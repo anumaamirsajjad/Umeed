@@ -57,7 +57,7 @@ export default function SafetyPlanViewPage() {
       if (typeof window !== 'undefined') window.location.href = ROUTES.onboarding;
       return;
     }
-    getSafetyPlan(userId)
+    getSafetyPlan()
       .then(setPlan)
       .finally(() => setLoading(false));
   }, [userId]);
@@ -65,7 +65,7 @@ export default function SafetyPlanViewPage() {
   const handleExportPDF = async () => {
     setExporting(true);
     try {
-      const blob = await exportSafetyPlanPDF(userId);
+      const blob = await exportSafetyPlanPDF();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

@@ -86,3 +86,41 @@ export async function getUserById(userId: string): Promise<UserRow | null> {
   const usersTable = loadTable<UserRow>('users');
   return usersTable[userId] || null;
 }
+
+export async function resetPassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: true } | { error: string }> {
+  const usersTable = loadTable<UserRow>('users');
+  const user = usersTable[userId];
+
+  if (!user) {
+    return { error: 'User not found' };
+  }
+
+  const isValid = await verifyPassword(currentPassword, user.password_hash);
+  if (!isValid) {
+    return { error: 'Current password is incorrect' };
+  }
+
+  if (newPassword.length < 6) {
+    return { error: 'New password must be at least 6 characters' };
+  }
+
+  if (currentPassword === newPassword) {
+    return { error: 'New password must be different from current password' };
+  }
+
+  const newPasswordHash = await hashPassword(newPassword);
+  const now = new Date().toISOString();
+
+  usersTable[user.id] = {
+    ...user,
+    password_hash: newPasswordHash,
+    updated_at: now,
+  };
+  saveTable('users', usersTable);
+
+  return { success: true };
+}

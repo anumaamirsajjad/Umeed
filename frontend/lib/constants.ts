@@ -73,8 +73,11 @@ export const CRISIS_ALERT_STORAGE_KEY = 'umeed-crisis-alert';
 // App routes
 export const ROUTES = {
   home: '/',
+  signup: '/signup',
+  login: '/login',
   onboarding: '/onboarding',
   chat: '/chat',
+  profile: '/profile',
   safetyPlanBuilder: '/safety-plan/builder',
   safetyPlanView: '/safety-plan/view',
   resources: '/resources',

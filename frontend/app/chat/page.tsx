@@ -51,11 +51,11 @@ export default function ChatPage() {
         window.location.href = ROUTES.onboarding;
       }
     } else {
-      getPreferences(userId)
+      getPreferences()
         .then(setPreferences)
         .catch((err) => console.warn('Could not load preferences:', err));
 
-      getMoodCheckinStatus(userId)
+      getMoodCheckinStatus()
         .then((status) => setShowMoodCheckin(!status.checkedInToday))
         .catch((err) => console.warn('Could not load mood status:', err));
     }
@@ -66,7 +66,7 @@ export default function ChatPage() {
   }, [messages, loading]);
 
   const handleMoodSubmit = async (moodScore: number, moodEmoji: string) => {
-    await submitMoodCheckin(userId, moodScore, moodEmoji);
+    await submitMoodCheckin(moodScore, moodEmoji);
     setLoggedMood(moodScore);
   };
 
@@ -74,7 +74,7 @@ export default function ChatPage() {
     setLoggedMood(score);
     setShowMoodCheckin(false);
     try {
-      await submitMoodCheckin(userId, score, emoji);
+      await submitMoodCheckin(score, emoji);
     } catch (err) {
       console.warn('Could not save mood check-in:', err);
     }
@@ -84,7 +84,7 @@ export default function ChatPage() {
     setMessages([]);
     setInput('');
     try {
-      await startNewChat(userId);
+      await startNewChat();
     } catch (err) {
       console.warn('Could not clear server-side chat session:', err);
     }
@@ -102,7 +102,6 @@ export default function ChatPage() {
     try {
       const response = await sendMessage({
         message: input,
-        userId,
         preferences: preferences || undefined,
         comfortMode,
       });
@@ -597,6 +596,36 @@ export default function ChatPage() {
             >
               Start Over
             </button>
+          </div>
+
+          {/* Profile Settings */}
+          <div>
+            <Link
+              href={ROUTES.profile}
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: '4px',
+                backgroundColor: 'white',
+                border: `1px solid var(--umeed-orange-100)`,
+                color: 'var(--umeed-ink-900)',
+                fontWeight: 700,
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
+                textDecoration: 'none',
+                textAlign: 'center',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+              }}
+            >
+              Profile Settings
+            </Link>
           </div>
         </div>
       </div>

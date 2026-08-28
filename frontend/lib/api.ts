@@ -58,6 +58,18 @@ export const getPreferences = async (): Promise<UserPreferences> => {
   return data;
 };
 
+export const checkOnboardingStatus = async (): Promise<{ completed: boolean; preferences: UserPreferences | null }> => {
+  const { data } = await client.get('/onboarding/status');
+  return data;
+};
+
+export const updatePreferences = async (
+  preferences: Partial<UserPreferences>
+): Promise<{ success: boolean; preferences: UserPreferences }> => {
+  const { data } = await client.put('/onboarding/preferences', preferences);
+  return data;
+};
+
 // Safety plan endpoints
 export const saveSafetyPlan = async (
   plan: Partial<SafetyPlan>
@@ -120,6 +132,18 @@ export const getResources = async (filters?: {
 
 export const searchResources = async (query: string): Promise<CrisisResource[]> => {
   const { data } = await client.get('/resources/search', { params: { q: query } });
+  return data;
+};
+
+// Auth endpoints - profile and password
+export const resetPassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; message: string }> => {
+  const { data } = await client.post('/auth/password-reset', {
+    currentPassword,
+    newPassword,
+  });
   return data;
 };
 
