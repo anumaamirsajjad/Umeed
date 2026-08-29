@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/authContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ROUTES } from '@/lib/constants';
+import { MoonToggle } from '@/components/common/MoonToggle';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -46,7 +47,10 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen jali-bg bg-surface-light dark:bg-surface-dark flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-card bg-surface dark:bg-surface-darker shadow-sm border border-primary-100 dark:border-primary-900/40 p-8 animate-fade-up">
+      <div className="w-full max-w-md relative rounded-card bg-surface dark:bg-surface-darker shadow-sm border border-primary-100 dark:border-primary-900/40 p-8 animate-fade-up">
+        <div className="absolute top-4 right-4">
+          <MoonToggle size="sm" />
+        </div>
         <div className="flex justify-center mb-6">
           <Image src="/logo.jpg" alt="Umeed" width={64} height={64} className="rounded-lg" />
         </div>

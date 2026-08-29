@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { ROUTES } from '@/lib/constants';
 import { Icon, type IconName } from '@/components/ui/Icon';
+import { MoonToggle } from './MoonToggle';
 
 const NAV_ITEMS: { label: string; urdu: string; href: string; icon: IconName }[] = [
   { label: 'Talk', urdu: 'گفتگو', href: ROUTES.chat, icon: 'chat' },
@@ -66,18 +67,21 @@ export function SidebarNav() {
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={handleLogout}
-        aria-label="Log out"
-        className="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer
-          text-ink-muted hover:text-primary-600 dark:hover:text-primary-300 transition-colors duration-micro ease-umeed"
-      >
-        <span className="w-9 h-9 rounded-lg flex items-center justify-center">
-          <Icon name="logout" className="h-[18px] w-[18px]" />
-        </span>
-        <span className="text-[9px] font-semibold tracking-wide uppercase leading-none">Log out</span>
-      </button>
+      <div className="flex flex-col items-center gap-4">
+        <MoonToggle size="sm" />
+        <button
+          type="button"
+          onClick={handleLogout}
+          aria-label="Log out"
+          className="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer
+            text-ink-muted hover:text-primary-600 dark:hover:text-primary-300 transition-colors duration-micro ease-umeed"
+        >
+          <span className="w-9 h-9 rounded-lg flex items-center justify-center">
+            <Icon name="logout" className="h-[18px] w-[18px]" />
+          </span>
+          <span className="text-[9px] font-semibold tracking-wide uppercase leading-none">Log out</span>
+        </button>
+      </div>
     </nav>
   );
 }

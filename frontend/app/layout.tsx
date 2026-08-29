@@ -3,7 +3,6 @@ import { Inter, Fraunces, Noto_Nastaliq_Urdu } from 'next/font/google';
 import './globals.css';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import { AuthProvider } from '@/lib/authContext';
-import { MoonToggle } from '@/components/common/MoonToggle';
 import { SidebarNav } from '@/components/common/SidebarNav';
 import { AppShell } from '@/components/common/AppShell';
 
@@ -31,7 +30,6 @@ export default function RootLayout({
         <AuthProvider>
           <SidebarNav />
           <AppShell>
-            <MoonToggle />
             <main className="flex-1">
               {children}
             </main>

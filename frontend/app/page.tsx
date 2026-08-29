@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
 import { Card } from '@/components/ui/Card';
 import { Icon, type IconName } from '@/components/ui/Icon';
+import { MoonToggle } from '@/components/common/MoonToggle';
 
 const FEATURES: { icon: IconName; title: string; body: string }[] = [
   {
@@ -41,6 +42,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <span className="font-display text-xl font-bold text-ink-light dark:text-ink-dark">Umeed</span>
           <div className="flex items-center gap-2">
+            <MoonToggle size="sm" />
             <Link
               href={ROUTES.login}
               className="rounded-lg px-4 py-2 text-sm font-semibold text-primary-800 dark:text-primary-100 hover:bg-primary-100 dark:hover:bg-white/5 transition-colors duration-micro ease-umeed"
