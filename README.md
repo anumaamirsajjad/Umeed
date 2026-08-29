@@ -132,8 +132,13 @@ npm run dev
 - `POST /auth/verify` — Verify token
 
 ### Chat (requires auth)
-- `POST /chat` — Send message to Claude
-- `POST /chat/new` — Start fresh session
+- `POST /chat` — Send message to Claude (creates a new conversation lazily if no `conversationId` is given)
+
+### Conversations (requires auth)
+- `GET /conversations` — List the user's conversations, most recently updated first
+- `GET /conversations/:id` — Get one conversation and its full message history
+- `PATCH /conversations/:id` — Rename a conversation
+- `DELETE /conversations/:id` — Delete a conversation and its messages
 
 ### Onboarding (requires auth)
 - `POST /onboarding/preferences` — Save preferences
@@ -213,7 +218,6 @@ NEXT_PUBLIC_API_URL=http://localhost:5000
 - [ ] Password reset flow
 - [ ] Rate limiting on auth endpoints
 - [ ] Refresh token support
-- [ ] Persistent chat history (currently in-memory per session)
 - [ ] Admin dashboard
 - [ ] GDPR compliance (data export/deletion)
 

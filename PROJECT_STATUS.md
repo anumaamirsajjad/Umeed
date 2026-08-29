@@ -166,8 +166,11 @@ Authentication Routes
 └── POST /auth/verify → Verify token
 
 Protected Routes (JWT required)
-├── POST /chat → Send message
-├── POST /chat/new → Start new session
+├── POST /chat → Send message (creates a conversation lazily)
+├── GET /conversations → List conversations
+├── GET /conversations/:id → Get conversation + messages
+├── PATCH /conversations/:id → Rename conversation
+├── DELETE /conversations/:id → Delete conversation
 ├── POST /onboarding/preferences → Save preferences
 ├── GET /onboarding/preferences → Get preferences
 ├── POST /safety-plan → Create/update plan
@@ -195,19 +198,17 @@ Protected Routes (JWT required)
 1. [ ] Email verification on signup
 2. [ ] Password reset flow
 3. [ ] Rate limiting (prevent brute force)
-4. [ ] Persistent chat history (database)
-5. [ ] Admin dashboard
-6. [ ] GDPR compliance (data export/deletion)
-7. [ ] Move JWT_SECRET to secure config
-8. [ ] Enable HTTPS
-9. [ ] Upgrade to PostgreSQL (from JSON store)
-10. [ ] Load testing and optimization
+4. [ ] Admin dashboard
+5. [ ] GDPR compliance (data export/deletion)
+6. [ ] Move JWT_SECRET to secure config
+7. [ ] Enable HTTPS
+8. [ ] Upgrade to PostgreSQL (from JSON store)
+9. [ ] Load testing and optimization
 
 ## Known Limitations
 
 - Tokens expire after 7 days (users must re-login)
 - No refresh token support
-- Chat history not persisted (in-memory per session)
 - No rate limiting on auth endpoints
 - JSON file storage (MVP only - needs database for production)
 

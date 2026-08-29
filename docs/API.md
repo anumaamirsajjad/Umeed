@@ -108,7 +108,7 @@ List all conversations for the authenticated user, sorted by most recently updat
     "id": "conv-789",
     "userId": "user-123",
     "title": "Work stress and coping",
-    "detectedLanguage": "en",
+    "detectedLanguage": "english",
     "createdAt": "2026-08-21T14:23:45Z",
     "updatedAt": "2026-08-21T16:45:12Z"
   },
@@ -133,7 +133,7 @@ Retrieve a specific conversation and all its messages.
     "id": "conv-789",
     "userId": "user-123",
     "title": "Work stress and coping",
-    "detectedLanguage": "en",
+    "detectedLanguage": "english",
     "createdAt": "2026-08-21T14:23:45Z",
     "updatedAt": "2026-08-21T16:45:12Z"
   },
@@ -141,14 +141,14 @@ Retrieve a specific conversation and all its messages.
     {
       "id": "msg-456",
       "conversationId": "conv-789",
-      "message": "I've been feeling really down lately",
+      "content": "I've been feeling really down lately",
       "role": "user",
       "createdAt": "2026-08-21T14:23:45Z"
     },
     {
       "id": "msg-457",
       "conversationId": "conv-789",
-      "message": "I hear you. That sounds really difficult...",
+      "content": "I hear you. That sounds really difficult...",
       "role": "assistant",
       "createdAt": "2026-08-21T14:24:10Z"
     }
@@ -183,7 +183,7 @@ Rename a conversation.
   "id": "conv-789",
   "userId": "user-123",
   "title": "New conversation title",
-  "detectedLanguage": "en",
+  "detectedLanguage": "english",
   "createdAt": "2026-08-21T14:23:45Z",
   "updatedAt": "2026-08-21T17:00:00Z"
 }

@@ -37,7 +37,7 @@ Successfully implemented a complete user authentication system for the Umeed men
 #### 5. Protected Routes
 Updated all user-specific endpoints to require authentication:
 - `POST /chat` → requires token
-- `POST /chat/new` → requires token
+- `GET /conversations`, `GET /conversations/:id`, `PATCH /conversations/:id`, `DELETE /conversations/:id` → require token
 - `POST /onboarding/preferences` → requires token
 - `GET /onboarding/preferences` → requires token
 - `POST /safety-plan` → requires token
@@ -89,7 +89,7 @@ Modified all controllers to extract userId from authenticated token instead of r
 - Updated API function signatures to remove `userId` parameters (comes from token)
 - Affected functions:
   - `sendMessage()`
-  - `startNewChat()`
+  - `listConversations()`, `getConversation()`, `renameConversation()`, `deleteConversation()`
   - `savePreferences()`
   - `getPreferences()`
   - `saveSafetyPlan()`

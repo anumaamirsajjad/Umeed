@@ -79,7 +79,7 @@ Five main tables:
 - `user_preferences` — onboarding choices (preference_type, preference_value, user_id, created_at)
 - `safety_plans` — user safety plans (user_id, warning_signs, coping_strategies, trusted_contacts, reasons_to_stay_safe, updated_at)
 - `conversations` — persisted chat conversations (id, user_id, title, detectedLanguage, created_at, updated_at)
-- `messages` — conversation messages (id, conversation_id, user_id, message, role, created_at)
+- `messages` — conversation messages (id, conversation_id, user_id, content, role, created_at)
 - `crisis_resources` — seeded from `resources-db/resources.json` (name, type, region, hotline, web_url, languages, availability)
 
 All data persists to flat JSON files (`backend/data/*.json`) via `backend/src/db/jsonStore.ts`, not a live SQL database. Conversations and their full message histories are saved, allowing users to revisit past conversations, and can be deleted individually by users.

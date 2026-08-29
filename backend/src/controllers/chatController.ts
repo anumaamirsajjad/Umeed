@@ -56,9 +56,12 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
     logger.debug(`User has ${activePatterns.length} active patterns`);
 
     // Persisted conversation history for this thread, in order (prior turns
-    // only — this turn's message hasn't been appended yet)
+    // only — this turn's message hasn't been appended yet). Capped to the
+    // most recent 20 messages so long-lived threads don't eventually exceed
+    // the model's context window.
     const conversationHistory = conversationService
       .getMessages(conversation.id)
+      .slice(-20)
       .map(m => ({ role: m.role, content: m.content }));
     const recentAssistantMessages = conversationService.getRecentAssistantMessages(conversation.id, 3);
 
