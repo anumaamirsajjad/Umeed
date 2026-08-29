@@ -8,7 +8,6 @@ import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { SafetyPlan } from '@/lib/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { BottomNav } from '@/components/common/BottomNav';
 import { Icon, type IconName } from '@/components/ui/Icon';
 
 function PlanSection({ title, icon, items, emptyLabel }: { title: string; icon: IconName; items: string[]; emptyLabel: string }) {
@@ -81,7 +80,7 @@ export default function SafetyPlanViewPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface-light dark:bg-surface-dark pb-24">
+    <div className="min-h-screen flex flex-col bg-surface-light dark:bg-surface-dark">
       <div className="flex-1 px-6 pt-16">
         <div className="max-w-2xl mx-auto space-y-6">
           <Card
@@ -166,8 +165,6 @@ export default function SafetyPlanViewPage() {
           </Card>
         </div>
       </div>
-
-      <BottomNav active="plan" />
     </div>
   );
 }
