@@ -62,7 +62,7 @@ module.exports = {
         ink: {
           light: '#44403A',
           dark: '#EDEBE7',
-          muted: '#8A8578',
+          muted: 'var(--umeed-ink-500)',
         },
         // Crisis mode ONLY — deliberately outside the calm sage/blue system so
         // it stays universally recognizable as urgent. One shade, used flat.

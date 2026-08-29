@@ -64,7 +64,7 @@ export default function LandingPage() {
               Support that meets you <em className="italic text-primary-700 dark:text-primary-300">where you are</em>.
             </h1>
             <p
-              className="animate-fade-up text-lead text-ink-light/80 dark:text-ink-dark/80 max-w-xl mx-auto"
+              className="animate-fade-up text-lead text-ink-muted max-w-xl mx-auto"
               style={{ animationDelay: '90ms' }}
             >
               Culturally-sensitive AI support that remembers your preferences, paired with a safety plan that&apos;s
@@ -80,7 +80,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p
-              className="animate-fade-up text-caption text-ink-light/60 dark:text-ink-dark/60"
+              className="animate-fade-up text-caption text-ink-muted"
               style={{ animationDelay: '220ms' }}
             >
               Free to use. No demographic questions — ever.
@@ -104,7 +104,7 @@ export default function LandingPage() {
                   <Icon name={f.icon} className="icon-inline" />
                 </div>
                 <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark">{f.title}</h2>
-                <p className="text-sm text-ink-light/70 dark:text-ink-dark/70">{f.body}</p>
+                <p className="text-sm text-ink-muted">{f.body}</p>
               </Card>
             ))}
           </div>
@@ -113,7 +113,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-primary-100 dark:border-primary-900/40">
         <div className="max-w-3xl mx-auto px-4 py-12 text-center space-y-4">
-          <p className="text-ink-light/70 dark:text-ink-dark/70">
+          <p className="text-ink-muted">
             Not ready to sign up? Crisis resources are open to everyone.
           </p>
           <Link

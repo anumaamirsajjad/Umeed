@@ -39,7 +39,7 @@ export function SegmentedControl<T extends string>({
               `rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-micro ease-umeed ` +
               (selected
                 ? 'bg-surface dark:bg-primary-800 text-primary-900 dark:text-primary-50 shadow-sm'
-                : 'text-ink-light/70 dark:text-ink-dark/70 hover:text-ink-light dark:hover:text-ink-dark')
+                : 'text-ink-muted hover:text-ink-light dark:hover:text-ink-dark')
             }
           >
             {option.icon && <span aria-hidden="true">{option.icon} </span>}

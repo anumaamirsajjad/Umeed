@@ -30,7 +30,7 @@ export function Collapsible({ title, icon, description, defaultOpen = true, chil
             {title}
           </h2>
           {description && (
-            <p className="text-sm text-ink-light/70 dark:text-ink-dark/70 mt-1">{description}</p>
+            <p className="text-sm text-ink-muted mt-1">{description}</p>
           )}
         </div>
         <svg

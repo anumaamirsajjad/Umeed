@@ -87,7 +87,7 @@ export default function DashboardPage() {
             <h1 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark">
               Welcome back{name ? `, ${name}` : ''}
             </h1>
-            <p className="text-sm text-ink-light/70 dark:text-ink-dark/70">Glad you&apos;re here.</p>
+            <p className="text-sm text-ink-muted">Glad you&apos;re here.</p>
           </div>
           <Link
             href={ROUTES.crisis}
@@ -126,12 +126,12 @@ export default function DashboardPage() {
             </div>
             {conversations === null ? (
               conversationsError ? (
-                <p className="text-sm text-ink-light/60 dark:text-ink-dark/60">Couldn&apos;t load conversations.</p>
+                <p className="text-sm text-ink-muted">Couldn&apos;t load conversations.</p>
               ) : (
                 <CardSkeleton />
               )
             ) : conversations.length === 0 ? (
-              <p className="text-sm text-ink-light/60 dark:text-ink-dark/60">
+              <p className="text-sm text-ink-muted">
                 No conversations yet — whenever you&apos;re ready, we&apos;re here.
               </p>
             ) : (
@@ -168,12 +168,12 @@ export default function DashboardPage() {
             </div>
             {mood === null ? (
               moodError ? (
-                <p className="text-sm text-ink-light/60 dark:text-ink-dark/60">Couldn&apos;t load your mood trend.</p>
+                <p className="text-sm text-ink-muted">Couldn&apos;t load your mood trend.</p>
               ) : (
                 <CardSkeleton />
               )
             ) : mood.data.length === 0 ? (
-              <p className="text-sm text-ink-light/60 dark:text-ink-dark/60">
+              <p className="text-sm text-ink-muted">
                 No check-ins yet this week — no pressure, just here whenever you want it.
               </p>
             ) : (
@@ -203,13 +203,13 @@ export default function DashboardPage() {
           </h2>
           {safetyPlan === undefined ? (
             safetyPlanError ? (
-              <p className="text-sm text-ink-light/60 dark:text-ink-dark/60">Couldn&apos;t load your safety plan.</p>
+              <p className="text-sm text-ink-muted">Couldn&apos;t load your safety plan.</p>
             ) : (
               <CardSkeleton />
             )
           ) : safetyPlan === null ? (
             <>
-              <p className="text-sm text-ink-light/70 dark:text-ink-dark/70">
+              <p className="text-sm text-ink-muted">
                 You haven&apos;t started a safety plan yet. It only takes a few minutes, and you can come back to it
                 anytime.
               </p>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
             </>
           ) : (
             <>
-              <p className="text-sm text-ink-light/70 dark:text-ink-dark/70">
+              <p className="text-sm text-ink-muted">
                 {safetyPlan.warningSigns.length} warning sign{safetyPlan.warningSigns.length === 1 ? '' : 's'} and{' '}
                 {safetyPlan.copingStrategies.length} coping strateg
                 {safetyPlan.copingStrategies.length === 1 ? 'y' : 'ies'} noted.

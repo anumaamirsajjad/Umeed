@@ -42,7 +42,7 @@ export default function LoginPage() {
         <h1 className="font-display text-3xl font-bold text-center text-ink-light dark:text-ink-dark mb-1">
           Welcome back
         </h1>
-        <p className="text-center text-ink-light/70 dark:text-ink-dark/70 mb-8">
+        <p className="text-center text-ink-muted mb-8">
           Continue your journey with Umeed.
         </p>
 
@@ -76,7 +76,7 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="text-center text-ink-light/70 dark:text-ink-dark/70 mt-6 text-sm">
+        <p className="text-center text-ink-muted mt-6 text-sm">
           Don&apos;t have an account?{' '}
           <Link href={ROUTES.signup} className="text-primary-700 dark:text-primary-300 font-semibold hover:underline">
             Sign up

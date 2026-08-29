@@ -55,7 +55,7 @@ export function MoodCheckinModal({ isOpen, onSubmit, onClose }: MoodCheckinModal
               <h2 id="mood-checkin-title" className="text-xl font-bold text-primary-900 dark:text-primary-100">
                 How's your mood today?
               </h2>
-              <p className="text-sm text-ink-light/70 dark:text-ink-dark/70">
+              <p className="text-sm text-ink-muted">
                 Just for you — private, and only takes a second.
               </p>
             </div>
@@ -86,7 +86,7 @@ export function MoodCheckinModal({ isOpen, onSubmit, onClose }: MoodCheckinModal
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full text-ink-light/60 dark:text-ink-dark/60 hover:text-ink-light dark:hover:text-ink-dark text-sm py-2 transition-colors duration-micro ease-umeed"
+                className="w-full text-ink-muted hover:text-ink-light dark:hover:text-ink-dark text-sm py-2 transition-colors duration-micro ease-umeed"
               >
                 Not today
               </button>

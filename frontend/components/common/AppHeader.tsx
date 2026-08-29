@@ -20,7 +20,7 @@ const NAV_LINKS: { page: AppPage; href: string; label: string }[] = [
 function linkClasses(active: boolean) {
   return active
     ? 'text-primary-900 dark:text-primary-100 font-semibold'
-    : 'text-ink-light/80 dark:text-ink-dark/80 hover:text-primary-700 dark:hover:text-primary-300';
+    : 'text-ink-muted hover:text-primary-700 dark:hover:text-primary-300';
 }
 
 /**
@@ -43,7 +43,7 @@ export function AppHeader({ current, onNewChat }: AppHeaderProps) {
             <button
               type="button"
               onClick={onNewChat}
-              className="text-sm font-medium text-ink-light/80 dark:text-ink-dark/80 hover:text-primary-700 dark:hover:text-primary-300"
+              className="text-sm font-medium text-ink-muted hover:text-primary-700 dark:hover:text-primary-300"
             >
               + New chat
             </button>

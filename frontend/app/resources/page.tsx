@@ -28,7 +28,7 @@ function ResourceCard({ resource }: { resource: CrisisResource }) {
     <div className="rounded-2xl bg-surface dark:bg-surface-darker border-l-4 border-primary-500 shadow-sm p-5 transition-all duration-quick ease-umeed hover:shadow-md hover:-translate-y-0.5">
       <div className="flex justify-between items-start gap-3 mb-2">
         <h3 className="text-lg font-bold text-ink-light dark:text-ink-dark">{resource.name}</h3>
-        <span className="bg-accent-600 text-white px-3 py-1 rounded-pill text-xs font-bold whitespace-nowrap">
+        <span className="bg-accent-700 text-white px-3 py-1 rounded-pill text-xs font-bold whitespace-nowrap">
           {TYPE_LABELS[resource.type]}
         </span>
       </div>
@@ -41,7 +41,7 @@ function ResourceCard({ resource }: { resource: CrisisResource }) {
         </span>
       )}
 
-      {resource.description && <p className="text-sm text-ink-light/80 dark:text-ink-dark/80 my-2 leading-relaxed">{resource.description}</p>}
+      {resource.description && <p className="text-sm text-ink-muted my-2 leading-relaxed">{resource.description}</p>}
 
       <div className="flex flex-col gap-2 mt-3">
         {resource.phone && (

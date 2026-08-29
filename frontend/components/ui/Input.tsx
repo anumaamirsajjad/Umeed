@@ -34,7 +34,7 @@ function FieldWrapper({ label, hint, error, htmlFor, children }: FieldWrapperPro
       )}
       {children}
       {hint && !error && (
-        <p className="text-xs text-ink-light/70 dark:text-ink-dark/70">{hint}</p>
+        <p className="text-xs text-ink-muted">{hint}</p>
       )}
       {error && (
         <p className="text-xs text-red-700 dark:text-red-400" role="alert">

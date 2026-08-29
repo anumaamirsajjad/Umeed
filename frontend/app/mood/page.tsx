@@ -110,7 +110,7 @@ export default function MoodTrendPage() {
         <Card padding="lg" className="space-y-6">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold text-primary-900 dark:text-primary-100">Your Week in Mood</h1>
-            <p className="text-base text-ink-light/70 dark:text-ink-dark/70">
+            <p className="text-base text-ink-muted">
               Private to you — a gentle way to notice how you've been feeling.
             </p>
           </div>
@@ -120,7 +120,7 @@ export default function MoodTrendPage() {
           ) : error ? (
             <p className="text-base text-primary-800 dark:text-primary-200">{error}</p>
           ) : data.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-primary-200 dark:border-primary-900/50 p-8 text-center text-ink-light/60 dark:text-ink-dark/60">
+            <div className="rounded-lg border-2 border-dashed border-primary-200 dark:border-primary-900/50 p-8 text-center text-ink-muted">
               No mood check-ins yet this week. They'll show up here once you start checking in from
               the chat page.
             </div>
