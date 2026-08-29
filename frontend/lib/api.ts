@@ -41,11 +41,11 @@ client.interceptors.response.use(
   (response) => response,
   (error) => {
     const url: string = error.config?.url || '';
-    const isAuthEndpoint = url.startsWith('/auth/');
+    const isAuthOwn401 = url === '/auth/login' || url === '/auth/signup';
     if (
       typeof window !== 'undefined' &&
       error.response?.status === 401 &&
-      !isAuthEndpoint
+      !isAuthOwn401
     ) {
       clearStoredAuth();
       if (window.location.pathname !== ROUTES.login) {
