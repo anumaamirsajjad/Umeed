@@ -15,6 +15,7 @@ if you're in crisis, it will always surface real crisis resources alongside the 
    - **Problem-solve** — help thinking through next steps
    - **Distract** — a lighter, different-topic conversation
    - **Guide** — step-by-step suggestions
+   - **Sidebar** — past conversations are listed on the left and can be reopened, renamed, or deleted.
 3. **Mood check-in** (`/mood`) — a quick emoji check-in, with a 7-day trend chart so you can
    see how you've been.
 4. **Safety plan** (`/safety-plan/builder`) — build a personal safety plan: warning signs,
@@ -38,7 +39,10 @@ hotline directly — see the Resources page for numbers in your region.**
 
 - It does not diagnose mental health conditions.
 - It does not replace therapy, counseling, or medical care.
-- It does not store your chat history long-term — only the preferences and safety plan
-  entries you explicitly save.
 - It does not assume anything about your culture, religion, or family structure — it only
   responds to what you tell it during onboarding or in conversation.
+
+## What Umeed Saves
+
+- Your chat history is saved so you can revisit past conversations at any time, rename them for easy reference, or delete them if you wish.
+- Your preferences from onboarding and any safety plans you create are also saved and can be edited anytime.
