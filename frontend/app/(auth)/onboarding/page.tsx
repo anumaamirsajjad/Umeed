@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { savePreferences, checkOnboardingStatus } from '@/lib/api';
+import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { UserPreferences } from '@/lib/types';
 import {
   SUPPORT_STYLE_OPTIONS,
@@ -25,39 +26,29 @@ const TOTAL_STEPS = 4;
 
 export default function Onboarding() {
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useRequireAuth({ requireOnboarded: false });
   const [step, setStep] = useState<Step>('redirect');
   const [loading, setLoading] = useState(false);
-  const [userId] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('userId');
-      if (stored) return stored;
-      const newId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('userId', newId);
-      return newId;
-    }
-    return '';
-  });
 
-  // Check if user has already completed onboarding
+  // Check if user has already completed onboarding (only once authenticated)
   useEffect(() => {
+    if (isLoading || !isAuthenticated) return;
+
     const checkStatus = async () => {
       try {
         const status = await checkOnboardingStatus();
         if (status.completed) {
-          // User has completed onboarding, skip to chat
           router.push(ROUTES.chat);
         } else {
-          // User hasn't completed onboarding, show the first step
           setStep('name');
         }
       } catch (err) {
-        // If API fails, start onboarding (could be first-time user)
         setStep('name');
       }
     };
 
     checkStatus();
-  }, [router]);
+  }, [isAuthenticated, isLoading, router]);
 
   const [preferences, setPreferences] = useState<Partial<UserPreferences>>({
     name: '',
