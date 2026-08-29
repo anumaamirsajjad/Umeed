@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getSafetyPlan, exportSafetyPlanPDF } from '@/lib/api';
 import { ROUTES } from '@/lib/constants';
+import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { SafetyPlan } from '@/lib/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -50,17 +51,14 @@ export default function SafetyPlanViewPage() {
   const [plan, setPlan] = useState<SafetyPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
-  const [userId] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('userId') || '' : ''));
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
 
   useEffect(() => {
-    if (!userId) {
-      if (typeof window !== 'undefined') window.location.href = ROUTES.onboarding;
-      return;
-    }
+    if (authLoading || !isAuthenticated) return;
     getSafetyPlan()
       .then(setPlan)
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [authLoading, isAuthenticated]);
 
   const handleExportPDF = async () => {
     setExporting(true);

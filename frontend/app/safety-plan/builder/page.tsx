@@ -8,6 +8,7 @@ import {
   getSafetyPlanSuggestions,
 } from '@/lib/api';
 import { ROUTES } from '@/lib/constants';
+import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { SafetyPlan, TrustedContact } from '@/lib/types';
 
 const EMPTY_PLAN: SafetyPlan = {
@@ -79,7 +80,7 @@ function linesToArray(text: string): string[] {
 
 export default function SafetyPlanBuilder() {
   const router = useRouter();
-  const [userId] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('userId') || '' : ''));
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
   const [plan, setPlan] = useState<SafetyPlan>(EMPTY_PLAN);
   const [contactDraft, setContactDraft] = useState<TrustedContact>(EMPTY_CONTACT);
   const [stepIndex, setStepIndex] = useState(0);
@@ -92,17 +93,14 @@ export default function SafetyPlanBuilder() {
   const isLastStep = stepIndex === STEPS.length - 1;
 
   useEffect(() => {
-    if (!userId) {
-      if (typeof window !== 'undefined') window.location.href = ROUTES.onboarding;
-      return;
-    }
+    if (authLoading || !isAuthenticated) return;
 
     getSafetyPlan()
       .then((existing) => {
         if (existing) setPlan({ ...EMPTY_PLAN, ...existing });
       })
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [authLoading, isAuthenticated]);
 
   const persist = useCallback(
     async (planToSave: SafetyPlan) => {
@@ -123,7 +121,7 @@ export default function SafetyPlanBuilder() {
         return null;
       }
     },
-    [userId]
+    []
   );
 
   const goToStep = async (index: number) => {

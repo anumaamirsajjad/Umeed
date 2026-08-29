@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { sendMessage, startNewChat, getPreferences, getMoodCheckinStatus, submitMoodCheckin } from '@/lib/api';
 import { MoodCheckinModal } from '@/components/common/MoodCheckinModal';
 import { ROUTES, CRISIS_ALERT_STORAGE_KEY } from '@/lib/constants';
+import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { ChatMessage, ComfortMode, UserPreferences } from '@/lib/types';
 
 // Add pulse animation keyframes
@@ -38,28 +39,19 @@ export default function ChatPage() {
   const [showMoodCheckin, setShowMoodCheckin] = useState(false);
   const [loggedMood, setLoggedMood] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [userId] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('userId') || '';
-    }
-    return '';
-  });
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
 
   useEffect(() => {
-    if (!userId) {
-      if (typeof window !== 'undefined') {
-        window.location.href = ROUTES.onboarding;
-      }
-    } else {
-      getPreferences()
-        .then(setPreferences)
-        .catch((err) => console.warn('Could not load preferences:', err));
+    if (authLoading || !isAuthenticated) return;
 
-      getMoodCheckinStatus()
-        .then((status) => setShowMoodCheckin(!status.checkedInToday))
-        .catch((err) => console.warn('Could not load mood status:', err));
-    }
-  }, [userId]);
+    getPreferences()
+      .then(setPreferences)
+      .catch((err) => console.warn('Could not load preferences:', err));
+
+    getMoodCheckinStatus()
+      .then((status) => setShowMoodCheckin(!status.checkedInToday))
+      .catch((err) => console.warn('Could not load mood status:', err));
+  }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

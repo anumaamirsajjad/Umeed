@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getPreferences, updatePreferences, resetPassword } from '@/lib/api';
+import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { UserPreferences } from '@/lib/types';
 import {
   SUPPORT_STYLE_OPTIONS,
@@ -16,6 +17,7 @@ type Tab = 'preferences' | 'password';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
   const [tab, setTab] = useState<Tab>('preferences');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,6 +32,8 @@ export default function ProfilePage() {
 
   // Load preferences
   useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
     const loadPreferences = async () => {
       try {
         const prefs = await getPreferences();
@@ -42,7 +46,7 @@ export default function ProfilePage() {
     };
 
     loadPreferences();
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const handleSavePreferences = async () => {
     if (!preferences) return;

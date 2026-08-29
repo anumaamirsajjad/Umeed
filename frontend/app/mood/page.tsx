@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getMoodTrend } from '@/lib/api';
-import { ROUTES } from '@/lib/constants';
+import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { MoodTrendPoint } from '@/lib/types';
 import { AppHeader } from '@/components/common/AppHeader';
 import { Card } from '@/components/ui/Card';
@@ -85,13 +85,10 @@ export default function MoodTrendPage() {
   const [average, setAverage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userId] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('userId') || '' : ''));
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
 
   useEffect(() => {
-    if (!userId) {
-      if (typeof window !== 'undefined') window.location.href = ROUTES.onboarding;
-      return;
-    }
+    if (authLoading || !isAuthenticated) return;
 
     getMoodTrend(7)
       .then((trend) => {
@@ -103,7 +100,7 @@ export default function MoodTrendPage() {
         setError('Could not load your mood trend right now.');
       })
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [authLoading, isAuthenticated]);
 
   return (
     <div className="min-h-screen flex flex-col">
