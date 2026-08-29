@@ -77,6 +77,26 @@ CREATE TABLE IF NOT EXISTS user_patterns (
   frequency INTEGER
 );
 
+-- Conversations (user's chat threads)
+CREATE TABLE IF NOT EXISTS conversations (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  detected_language TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Messages (individual turns within conversations)
+CREATE TABLE IF NOT EXISTS messages (
+  id TEXT PRIMARY KEY,
+  conversation_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+  content TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences(user_id);
@@ -85,12 +105,14 @@ CREATE INDEX IF NOT EXISTS idx_crisis_resources_region ON crisis_resources(regio
 CREATE INDEX IF NOT EXISTS idx_crisis_resources_type ON crisis_resources(type);
 CREATE INDEX IF NOT EXISTS idx_mood_checkins_user_id ON mood_checkins(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_patterns_user_id ON user_patterns(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
 `;
 
 // NOTE: This schema documents the intended relational shape. The current MVP
 // persistence layer (backend/src/db/jsonStore.ts) stores these same tables as
 // flat JSON files instead of executing this SQL - see safety_plans, mood_checkins,
-// and user_patterns records under backend/data/. Swap in a real SQL engine against
+// user_patterns, conversations, and messages records under backend/data/. Swap in a real SQL engine against
 // this schema when moving past the hackathon MVP.
 
 // Type definitions for database rows
@@ -137,4 +159,22 @@ export interface CrisisResourceRow {
   description?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface ConversationRow {
+  id: string;
+  user_id: string;
+  title: string;
+  detected_language?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MessageRow {
+  id: string;
+  conversation_id: string;
+  user_id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
 }

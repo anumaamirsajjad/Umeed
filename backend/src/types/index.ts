@@ -19,6 +19,26 @@ export interface ChatMessage {
   content: string;
 }
 
+// Persisted Conversation (one thread in a user's chat history)
+export interface Conversation {
+  id: string;
+  userId: string;
+  title: string;
+  detectedLanguage?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Persisted Message (one turn within a Conversation)
+export interface StoredMessage {
+  id: string;
+  conversationId: string;
+  userId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: Date;
+}
+
 // Safety Plan
 export interface SafetyPlan {
   id: string;
@@ -77,12 +97,14 @@ export interface CrisisDetectionResult {
 export interface ChatRequest {
   message: string;
   userId: string;
+  conversationId?: string;
   preferences?: Partial<UserPreferences>;
   comfortMode?: 'just_listen' | 'problem_solve' | 'distract' | 'guide';
 }
 
 export interface ChatResponse {
   id: string;
+  conversationId: string;
   message: string;
   isCrisis: boolean;
   crisisAlert?: {
