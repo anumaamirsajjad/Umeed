@@ -38,3 +38,6 @@ logs/
 
 # Superpowers SDD workspace (scratch)
 .superpowers/
+
+# TypeScript build cache
+*.tsbuildinfo
