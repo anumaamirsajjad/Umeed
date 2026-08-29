@@ -76,6 +76,7 @@ export const ROUTES = {
   signup: '/signup',
   login: '/login',
   onboarding: '/onboarding',
+  dashboard: '/dashboard',
   chat: '/chat',
   profile: '/profile',
   safetyPlanBuilder: '/safety-plan/builder',

@@ -9,12 +9,13 @@ import type { SafetyPlan } from '@/lib/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { BottomNav } from '@/components/common/BottomNav';
+import { Icon, type IconName } from '@/components/ui/Icon';
 
-function PlanSection({ title, icon, items, emptyLabel }: { title: string; icon: string; items: string[]; emptyLabel: string }) {
+function PlanSection({ title, icon, items, emptyLabel }: { title: string; icon: IconName; items: string[]; emptyLabel: string }) {
   return (
     <div className="space-y-2">
-      <h2 className="font-serif text-lg font-semibold text-ink-light dark:text-ink-dark">
-        <span aria-hidden="true">{icon} </span>
+      <h2 className="font-serif text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
+        <Icon name={icon} className="icon-inline text-primary-600 dark:text-primary-300" />
         {title}
       </h2>
       {items.length > 0 ? (
@@ -110,12 +111,13 @@ export default function SafetyPlanViewPage() {
                 </div>
 
                 <div className="space-y-6">
-                  <PlanSection title="Warning Signs" icon="📍" items={plan.warningSigns} emptyLabel="Nothing added yet." />
-                  <PlanSection title="Coping Strategies" icon="🛠️" items={plan.copingStrategies} emptyLabel="Nothing added yet." />
+                  <PlanSection title="Warning Signs" icon="flag" items={plan.warningSigns} emptyLabel="Nothing added yet." />
+                  <PlanSection title="Coping Strategies" icon="leaf" items={plan.copingStrategies} emptyLabel="Nothing added yet." />
 
                   <div className="space-y-2">
-                    <h2 className="font-serif text-lg font-semibold text-ink-light dark:text-ink-dark">
-                      <span aria-hidden="true">👥 </span>People in Your Corner
+                    <h2 className="font-serif text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
+                      <Icon name="people" className="icon-inline text-primary-600 dark:text-primary-300" />
+                      People in Your Corner
                     </h2>
                     {plan.trustedContacts.length > 0 ? (
                       <ul className="space-y-1.5">
@@ -139,10 +141,10 @@ export default function SafetyPlanViewPage() {
                     )}
                   </div>
 
-                  <PlanSection title="What Keeps You Going" icon="💪" items={plan.reasonsToStaySafe} emptyLabel="Nothing added yet." />
+                  <PlanSection title="What Keeps You Going" icon="heart" items={plan.reasonsToStaySafe} emptyLabel="Nothing added yet." />
                   <PlanSection
                     title="Making Space Safer"
-                    icon="🏠"
+                    icon="house"
                     items={plan.environmentSafetySteps}
                     emptyLabel="Nothing added yet."
                   />
@@ -154,8 +156,9 @@ export default function SafetyPlanViewPage() {
                       Edit plan
                     </Button>
                   </Link>
-                  <Button className="flex-1 rounded-pill" loading={exporting} onClick={handleExportPDF}>
-                    📄 Export as PDF
+                  <Button className="flex-1 rounded-pill gap-1.5" loading={exporting} onClick={handleExportPDF}>
+                    <Icon name="download" className="icon-inline" />
+                    Export as PDF
                   </Button>
                 </div>
               </>

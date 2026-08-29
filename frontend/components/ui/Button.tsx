@@ -29,7 +29,7 @@ const variants: Record<Variant, string> = {
     'focus-visible:outline-primary-500 dark:text-primary-100 dark:hover:bg-white/5',
   // Reserved for crisis-adjacent actions — not general destructive UI.
   danger:
-    'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus-visible:outline-red-500',
+    'bg-crisis-600 text-white hover:bg-crisis-700 active:bg-crisis-700 focus-visible:outline-crisis-600',
 };
 
 const sizes: Record<Size, string> = {

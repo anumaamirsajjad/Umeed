@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { ROUTES } from '@/lib/constants';
+import { Icon, type IconName } from '@/components/ui/Icon';
 
-const NAV_ITEMS = [
-  { label: 'Talk', urdu: 'گفتگو', href: '/chat' },
-  { label: 'My Plan', urdu: 'میری منصوبہ', href: '/safety-plan/view' },
-  { label: 'Support', urdu: 'معاونت', href: '/resources' },
+const NAV_ITEMS: { label: string; urdu: string; href: string; icon: IconName }[] = [
+  { label: 'Talk', urdu: 'گفتگو', href: ROUTES.chat, icon: 'chat' },
+  { label: 'My Plan', urdu: 'میری منصوبہ', href: ROUTES.safetyPlanView, icon: 'compass' },
+  { label: 'Support', urdu: 'معاونت', href: ROUTES.resources, icon: 'lifebuoy' },
 ];
 
 export function SidebarNav() {
@@ -27,37 +28,39 @@ export function SidebarNav() {
 
   return (
     <nav
-      className="fixed left-0 top-0 w-20 h-screen flex flex-col items-center justify-between gap-10 py-6 border-r"
-      style={{
-        backgroundColor: 'var(--umeed-beige-200)',
-        borderColor: 'var(--umeed-orange-100)',
-      }}
+      className="fixed left-0 top-0 w-20 h-screen flex flex-col items-center justify-between gap-8 py-6
+        border-r bg-surface-light dark:bg-surface-dark border-primary-100 dark:border-primary-900/40"
     >
-      <div className="flex flex-col items-center gap-10">
+      <Link
+        href={ROUTES.dashboard}
+        aria-label="Umeed home"
+        className="font-display text-lg font-bold text-primary-700 dark:text-primary-300"
+      >
+        U
+      </Link>
+
+      <div className="flex flex-col items-center gap-8">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center gap-1 transition-all duration-300"
-              style={{
-                color: isActive ? 'var(--umeed-orange-500)' : 'var(--umeed-ink-500)',
-                textDecoration: 'none',
-              }}
+              className={`flex flex-col items-center gap-1.5 no-underline transition-colors duration-micro ease-umeed ${
+                isActive
+                  ? 'text-primary-700 dark:text-primary-300'
+                  : 'text-ink-muted hover:text-primary-600 dark:hover:text-primary-300'
+              }`}
             >
               <span
-                className="w-6 h-6 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: isActive ? 'var(--umeed-orange-100)' : 'transparent' }}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-micro ease-umeed ${
+                  isActive ? 'bg-primary-100 dark:bg-primary-900/40' : ''
+                }`}
               >
-                {item.label.charAt(0)}
+                <Icon name={item.icon} className="h-[18px] w-[18px]" />
               </span>
-              <span style={{ fontSize: '7px', fontFamily: "'Noto Nastaliq Urdu', serif", fontWeight: 700 }}>
-                {item.urdu}
-              </span>
-              <span style={{ fontSize: '9px', fontWeight: 600, letterSpacing: '0.3px', textTransform: 'uppercase' }}>
-                {item.label}
-              </span>
+              <span className="text-[7px] font-nastaliq font-bold leading-none">{item.urdu}</span>
+              <span className="text-[9px] font-semibold tracking-wide uppercase leading-none">{item.label}</span>
             </Link>
           );
         })}
@@ -67,13 +70,13 @@ export function SidebarNav() {
         type="button"
         onClick={handleLogout}
         aria-label="Log out"
-        className="flex flex-col items-center gap-1 transition-all duration-300"
-        style={{ color: 'var(--umeed-ink-500)', background: 'none', border: 'none', cursor: 'pointer' }}
+        className="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer
+          text-ink-muted hover:text-primary-600 dark:hover:text-primary-300 transition-colors duration-micro ease-umeed"
       >
-        <span className="w-6 h-6 rounded-full flex items-center justify-center">⎋</span>
-        <span style={{ fontSize: '9px', fontWeight: 600, letterSpacing: '0.3px', textTransform: 'uppercase' }}>
-          Log out
+        <span className="w-9 h-9 rounded-lg flex items-center justify-center">
+          <Icon name="logout" className="h-[18px] w-[18px]" />
         </span>
+        <span className="text-[9px] font-semibold tracking-wide uppercase leading-none">Log out</span>
       </button>
     </nav>
   );

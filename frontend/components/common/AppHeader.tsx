@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
+import { Icon } from '@/components/ui/Icon';
 
 export type AppPage = 'chat' | 'safety-plan' | 'mood' | 'resources';
 
@@ -32,10 +33,11 @@ export function AppHeader({ current, onNewChat }: AppHeaderProps) {
       <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4 flex-shrink-0">
           <Link
-            href={ROUTES.home}
-            className="text-lg font-bold text-primary-900 dark:text-primary-100 hover:text-primary-700 dark:hover:text-primary-300"
+            href={ROUTES.dashboard}
+            className="flex items-center gap-1.5 text-lg font-bold text-primary-900 dark:text-primary-100 hover:text-primary-700 dark:hover:text-primary-300"
           >
-            🏠 Home
+            <Icon name="home" className="icon-inline" />
+            Home
           </Link>
           {current === 'chat' && onNewChat ? (
             <button

@@ -1,427 +1,129 @@
-'use client';
-
 import Link from 'next/link';
-import Image from 'next/image';
-import { useEffect, useRef } from 'react';
 import { ROUTES } from '@/lib/constants';
+import { Card } from '@/components/ui/Card';
+import { Icon, type IconName } from '@/components/ui/Icon';
 
-export default function Home() {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const chaptersRef = useRef<(HTMLElement | null)[]>([]);
+const FEATURES: { icon: IconName; title: string; body: string }[] = [
+  {
+    icon: 'chat',
+    title: 'Talk, your way',
+    body: "Tell us how you'd rather be supported — family, professional, or working through it solo. We adapt to what you say, never to assumptions about who you are.",
+  },
+  {
+    icon: 'compass',
+    title: "A safety plan that's yours",
+    body: 'Build a plan for hard days — warning signs, coping strategies, people you trust — and export it whenever you need it.',
+  },
+  {
+    icon: 'lifebuoy',
+    title: 'Real resources, nearby',
+    body: 'Crisis lines and professional support, filtered to your region — always one tap away, whether or not you’re signed in.',
+  },
+];
 
-  useEffect(() => {
-    // Add animation styles to head
-    if (typeof document !== 'undefined' && !document.querySelector('#umeed-landing-animations')) {
-      const style = document.createElement('style');
-      style.id = 'umeed-landing-animations';
-      style.textContent = `
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes bounce {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-8px);
-          }
-        }
-
-        .hero-headline {
-          animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s backwards;
-        }
-
-        .hero-subline {
-          animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s backwards;
-        }
-
-        .hero-description {
-          animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.5s backwards;
-        }
-
-        .scroll-indicator {
-          animation: bounce 2s infinite;
-        }
-
-        .chapter-visible {
-          animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .hero-headline,
-          .hero-subline,
-          .hero-description,
-          .chapter-visible,
-          .scroll-indicator {
-            animation: none;
-            opacity: 1;
-            transform: none;
-          }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    // Scroll-triggered animations using IntersectionObserver
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('chapter-visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    chaptersRef.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  const chapters = [
-    {
-      title: 'Talk',
-      urdu: 'گفتگو کریں',
-      description: 'Share what is on your mind in a judgment-free space. Umeed listens without rushing, without judgment, adapted to how you prefer support.',
-      href: ROUTES.chat,
-      emoji: '💬',
-    },
-    {
-      title: 'Plan',
-      urdu: 'منصوبہ بنائیں',
-      description: 'Build your personal safety plan with warning signs, coping strategies, and trusted contacts. Yours to keep, yours to share.',
-      href: ROUTES.safetyPlanBuilder,
-      emoji: '📋',
-    },
-    {
-      title: 'Resources',
-      urdu: 'وسائل',
-      description: 'Crisis hotlines, counselors, and support groups nearby. Available in your language, 24/7.',
-      href: ROUTES.resources,
-      emoji: '🤝',
-    },
-  ];
-
+export default function LandingPage() {
   return (
-    <div style={{ backgroundColor: 'var(--umeed-beige-50)', minHeight: '100vh' }}>
-      {/* Header with Logo and Signup */}
-      <header style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '20px 40px',
-        borderBottom: '1px solid var(--umeed-orange-200)',
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-        backdropFilter: 'blur(10px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}>
-        <Link href={ROUTES.home} style={{
-          textDecoration: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-        }}>
-          <Image
-            src="/logo.jpg"
-            alt="Umeed Logo"
-            width={40}
-            height={40}
-            style={{ borderRadius: '8px' }}
-          />
-          <span style={{
-            fontSize: '24px',
-            fontWeight: 700,
-            color: 'var(--umeed-ink-900)',
-            fontFamily: "'Fraunces', Georgia, serif",
-          }}>
-            Umeed
+    <div className="min-h-screen flex flex-col bg-surface-light dark:bg-surface-dark">
+      {/* Persistent crisis banner — independent of the auth wall, reachable in under 3 seconds */}
+      <div className="sticky top-0 z-50 bg-primary-800 text-white">
+        <div className="max-w-5xl mx-auto px-4 py-2 flex items-center justify-between gap-3 text-sm">
+          <span className="flex items-center gap-2">
+            <Icon name="shield" className="icon-inline" />
+            In crisis right now? You don&apos;t have to wait.
           </span>
-        </Link>
-        <Link href={ROUTES.signup} style={{
-          backgroundColor: 'var(--umeed-orange-500)',
-          color: 'white',
-          padding: '12px 28px',
-          borderRadius: '9999px',
-          fontWeight: 700,
-          fontSize: '14px',
-          textDecoration: 'none',
-          transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-          boxShadow: '0 4px 12px rgba(244, 107, 31, 0.2)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.05)';
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(244, 107, 31, 0.3)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(244, 107, 31, 0.2)';
-        }}>
-          Sign Up
-        </Link>
-      </header>
-
-      {/* Hero Section */}
-      <section
-        ref={heroRef}
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          paddingTop: '60px',
-          paddingBottom: '80px',
-          paddingLeft: '40px',
-          paddingRight: '40px',
-          position: 'relative',
-        }}
-      >
-        <div style={{ maxWidth: '900px' }}>
-          <h1 className="hero-headline" style={{
-            fontSize: '64px',
-            fontFamily: "'Fraunces', Georgia, serif",
-            fontWeight: 700,
-            color: 'var(--umeed-ink-900)',
-            marginBottom: '0px',
-            lineHeight: 1.2,
-          }}>
-            Umeed
-          </h1>
-          <p className="hero-subline" style={{
-            fontSize: '20px',
-            fontFamily: "'Noto Nastaliq Urdu', serif",
-            fontWeight: 700,
-            color: 'var(--umeed-orange-500)',
-            marginBottom: '32px',
-            lineHeight: 1.8,
-          }}>
-            امید سے بات کریں
-          </p>
-          <p className="hero-description" style={{
-            fontSize: '16px',
-            color: 'var(--umeed-ink-500)',
-            marginBottom: '32px',
-            maxWidth: '600px',
-            lineHeight: 1.6,
-          }}>
-            A warm, judgment-free space to talk about what is on your mind — adapted to how you prefer support. Not a replacement for professional care, but a steady companion during difficult moments.
-          </p>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div style={{
-          position: 'absolute',
-          bottom: '40px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          textAlign: 'center',
-        }}>
-          <p style={{
-            fontSize: '12px',
-            color: 'var(--umeed-ink-400)',
-            marginBottom: '12px',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            fontWeight: 600,
-          }}>
-            Scroll to explore
-          </p>
-          <div className="scroll-indicator" style={{
-            fontSize: '20px',
-            color: 'var(--umeed-orange-400)',
-          }}>
-            ↓
-          </div>
-        </div>
-      </section>
-
-      {/* Chapters: Each Feature as Full-Height Section */}
-      {chapters.map((chapter, idx) => (
-        <section
-          key={chapter.href}
-          ref={(el) => {
-            if (el) chaptersRef.current[idx] = el;
-          }}
-          style={{
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingTop: '100px',
-            paddingBottom: '100px',
-            paddingLeft: '40px',
-            paddingRight: '40px',
-            opacity: 0,
-          }}
-        >
-          <div style={{ maxWidth: '800px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '24px' }}>
-              {chapter.emoji}
-            </div>
-            <h2 style={{
-              fontSize: '44px',
-              fontFamily: "'Fraunces', Georgia, serif",
-              fontWeight: 700,
-              color: 'var(--umeed-ink-900)',
-              marginBottom: '12px',
-              lineHeight: 1.2,
-            }}>
-              {chapter.title}
-            </h2>
-            <p style={{
-              fontSize: '20px',
-              fontFamily: "'Noto Nastaliq Urdu', serif",
-              fontWeight: 700,
-              color: 'var(--umeed-orange-500)',
-              marginBottom: '32px',
-              lineHeight: 1.8,
-            }}>
-              {chapter.urdu}
-            </p>
-            <p style={{
-              fontSize: '16px',
-              color: 'var(--umeed-ink-500)',
-              marginBottom: '40px',
-              lineHeight: 1.8,
-              maxWidth: '600px',
-              margin: '0 auto 40px',
-            }}>
-              {chapter.description}
-            </p>
-            <Link
-              href={chapter.href}
-              style={{
-                display: 'inline-block',
-                backgroundColor: 'var(--umeed-orange-500)',
-                color: 'white',
-                padding: '16px 40px',
-                borderRadius: '9999px',
-                fontWeight: 700,
-                fontSize: '16px',
-                textDecoration: 'none',
-                transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-                boxShadow: '0 4px 12px rgba(244, 107, 31, 0.2)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(244, 107, 31, 0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(244, 107, 31, 0.2)';
-              }}
-            >
-              Explore {chapter.title}
-            </Link>
-          </div>
-        </section>
-      ))}
-
-      {/* CTA Section */}
-      <section
-        ref={(el) => {
-          if (el) chaptersRef.current[chapters.length] = el;
-        }}
-        style={{
-          minHeight: '60vh',
-          backgroundColor: 'var(--umeed-orange-500)',
-          color: 'white',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingLeft: '40px',
-          paddingRight: '40px',
-          paddingTop: '60px',
-          paddingBottom: '60px',
-          textAlign: 'center',
-          opacity: 0,
-        }}
-      >
-        <div style={{ maxWidth: '600px' }}>
-          <h2 style={{
-            fontSize: '44px',
-            fontFamily: "'Fraunces', Georgia, serif",
-            fontWeight: 700,
-            marginBottom: '16px',
-          }}>
-            Ready to start?
-          </h2>
-          <p style={{
-            fontSize: '16px',
-            marginBottom: '32px',
-            opacity: 0.95,
-          }}>
-            Your privacy is protected. Begin whenever you are ready.
-          </p>
-          <Link
-            href={ROUTES.signup}
-            style={{
-              display: 'inline-block',
-              backgroundColor: 'white',
-              color: 'var(--umeed-orange-500)',
-              padding: '16px 40px',
-              borderRadius: '9999px',
-              fontWeight: 700,
-              fontSize: '16px',
-              textDecoration: 'none',
-              transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            Get Started
+          <Link href={ROUTES.resources} className="font-semibold underline underline-offset-2 whitespace-nowrap">
+            Get help now &rarr;
           </Link>
         </div>
-      </section>
+      </div>
 
-      {/* Safety Notice */}
-      <section style={{
-        backgroundColor: 'var(--umeed-orange-100)',
-        borderLeft: '4px solid var(--umeed-orange-700)',
-        padding: '24px 32px',
-        marginLeft: '40px',
-        marginRight: '40px',
-        marginTop: '60px',
-        marginBottom: '60px',
-        borderRadius: '4px',
-      }}>
-        <p style={{
-          fontSize: '14px',
-          color: 'var(--umeed-ink-900)',
-          margin: 0,
-        }}>
-          <strong>Important:</strong> This tool is a supportive companion, not a replacement for professional mental health care.
-          If you are in crisis, please{' '}
-          <Link href={ROUTES.resources} style={{
-            color: 'var(--umeed-orange-700)',
-            fontWeight: 700,
-            textDecoration: 'none',
-            borderBottom: '2px solid var(--umeed-orange-700)',
-          }}>
-            reach out to a crisis hotline immediately
-          </Link>.
-        </p>
-      </section>
+      <header className="border-b border-primary-100 dark:border-primary-900/40">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+          <span className="font-display text-xl font-bold text-ink-light dark:text-ink-dark">Umeed</span>
+          <div className="flex items-center gap-2">
+            <Link
+              href={ROUTES.login}
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-primary-800 dark:text-primary-100 hover:bg-primary-100 dark:hover:bg-white/5 transition-colors duration-micro ease-umeed"
+            >
+              Log in
+            </Link>
+            <Link
+              href={ROUTES.signup}
+              className="rounded-lg px-4 py-2 text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white transition-colors duration-micro ease-umeed"
+            >
+              Sign up
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1">
+        <section className="jali-bg">
+          <div className="max-w-3xl mx-auto px-4 pt-16 pb-20 text-center space-y-6">
+            <h1 className="animate-fade-up font-display text-4xl md:text-hero font-bold text-ink-light dark:text-ink-dark leading-tight">
+              Support that meets you <em className="italic text-primary-700 dark:text-primary-300">where you are</em>.
+            </h1>
+            <p
+              className="animate-fade-up text-lead text-ink-light/80 dark:text-ink-dark/80 max-w-xl mx-auto"
+              style={{ animationDelay: '90ms' }}
+            >
+              Culturally-sensitive AI support that remembers your preferences, paired with a safety plan that&apos;s
+              actually yours.
+            </p>
+            <div className="animate-fade-up" style={{ animationDelay: '160ms' }}>
+              <Link
+                href={ROUTES.signup}
+                className="inline-flex items-center gap-2 justify-center rounded-pill bg-primary-600 hover:bg-primary-700 text-white font-semibold text-lg px-8 py-3.5 transition-colors duration-micro ease-umeed"
+              >
+                Get started
+                <Icon name="arrowRight" className="icon-inline" />
+              </Link>
+            </div>
+            <p
+              className="animate-fade-up text-caption text-ink-light/60 dark:text-ink-dark/60"
+              style={{ animationDelay: '220ms' }}
+            >
+              Free to use. No demographic questions — ever.
+            </p>
+          </div>
+        </section>
+
+        <section className="max-w-5xl mx-auto px-4 pb-20">
+          <div className="grid gap-6 md:grid-cols-3">
+            {FEATURES.map((f, i) => (
+              <Card
+                key={f.title}
+                padding="lg"
+                className="animate-fade-up space-y-3 hover:-translate-y-1 hover:shadow-md transition-all duration-quick ease-umeed"
+                style={{ animationDelay: `${260 + i * 80}ms` }}
+              >
+                <div
+                  aria-hidden="true"
+                  className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-primary-700 dark:text-primary-300"
+                >
+                  <Icon name={f.icon} className="icon-inline" />
+                </div>
+                <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark">{f.title}</h2>
+                <p className="text-sm text-ink-light/70 dark:text-ink-dark/70">{f.body}</p>
+              </Card>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-primary-100 dark:border-primary-900/40">
+        <div className="max-w-3xl mx-auto px-4 py-12 text-center space-y-4">
+          <p className="text-ink-light/70 dark:text-ink-dark/70">
+            Not ready to sign up? Crisis resources are open to everyone.
+          </p>
+          <Link
+            href={ROUTES.resources}
+            className="inline-flex items-center justify-center rounded-pill border border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-200 font-semibold px-6 py-2.5 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors duration-micro ease-umeed"
+          >
+            Browse crisis &amp; support resources
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }

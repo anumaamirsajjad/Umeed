@@ -5,22 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { sendMessage, listConversations, getConversation, renameConversation, deleteConversation, getPreferences, getMoodCheckinStatus, submitMoodCheckin } from '@/lib/api';
 import { MoodCheckinModal } from '@/components/common/MoodCheckinModal';
+import { Avatar } from '@/components/common/Avatar';
+import { Icon } from '@/components/ui/Icon';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ROUTES, CRISIS_ALERT_STORAGE_KEY } from '@/lib/constants';
 import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { ChatMessage, ComfortMode, Conversation, UserPreferences } from '@/lib/types';
-
-// Add pulse animation keyframes
-if (typeof document !== 'undefined' && !document.querySelector('#umeed-animations')) {
-  const style = document.createElement('style');
-  style.id = 'umeed-animations';
-  style.textContent = `
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-  `;
-  document.head.appendChild(style);
-}
 
 const COMFORT_MODES: { value: ComfortMode; label: string }[] = [
   { value: 'just_listen', label: 'Just listen' },
@@ -28,6 +18,8 @@ const COMFORT_MODES: { value: ComfortMode; label: string }[] = [
   { value: 'distract', label: 'Distract' },
   { value: 'guide', label: 'Guide' },
 ];
+
+const MOOD_LABELS = ['Really struggling', 'Not great', 'Okay', 'Good', 'Great'];
 
 export default function ChatPage() {
   const router = useRouter();
@@ -59,9 +51,15 @@ export default function ChatPage() {
     listConversations()
       .then(async (list) => {
         setConversations(list);
-        if (list.length > 0) {
-          const { messages: loadedMessages } = await getConversation(list[0].id);
-          setActiveConversationId(list[0].id);
+        // A dashboard "recent conversations" card can deep-link here via
+        // ?c=<id>; fall back to the most recent conversation otherwise.
+        const requestedId = new URLSearchParams(window.location.search).get('c');
+        const targetId = (requestedId && list.some((c) => c.id === requestedId))
+          ? requestedId
+          : list[0]?.id;
+        if (targetId) {
+          const { messages: loadedMessages } = await getConversation(targetId);
+          setActiveConversationId(targetId);
           setMessages(loadedMessages);
         }
       })
@@ -187,78 +185,34 @@ export default function ChatPage() {
   };
 
   const greeting = `Hey ${preferences?.name?.trim() || 'there'}, good to see you.`;
-
-  const moodLabel = loggedMood
-    ? ['Really struggling', 'Not great', 'Okay', 'Good', 'Great'][loggedMood - 1]
-    : 'Not set';
-
+  const moodLabel = loggedMood ? MOOD_LABELS[loggedMood - 1] : 'Not set';
   const moodScores = [1, 2, 3, 4, 5];
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--umeed-beige-50)',
-      display: 'flex',
-      flexDirection: 'column',
-      marginLeft: '80px',
-    }}>
+    <div className="min-h-screen bg-surface-light dark:bg-surface-dark flex flex-col">
       <MoodCheckinModal
         isOpen={showMoodCheckin}
         onSubmit={handleMoodSubmit}
         onClose={() => setShowMoodCheckin(false)}
       />
 
-      {/* Three-column layout: conversations (left) + messages (center) + sidebar (right) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '240px 1fr 300px',
-        gap: '30px',
-        flex: 1,
-        overflow: 'hidden',
-        padding: '24px',
-      }}>
-
+      <div className="grid grid-cols-[240px_1fr_300px] gap-6 flex-1 overflow-hidden p-6">
         {/* Conversation list column */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '16px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-          overflowY: 'auto',
-          height: 'fit-content',
-          maxHeight: '100%',
-        }}>
+        <div className="rounded-card bg-surface dark:bg-surface-darker border border-primary-100 dark:border-primary-900/40 shadow-sm p-4 flex flex-col gap-1 overflow-y-auto h-fit max-h-full">
           <button
             onClick={handleNewChat}
-            style={{
-              padding: '10px 12px',
-              borderRadius: '4px',
-              backgroundColor: 'var(--umeed-orange-500)',
-              color: 'white',
-              border: 'none',
-              fontWeight: 700,
-              fontSize: '14px',
-              cursor: 'pointer',
-              marginBottom: '8px',
-            }}
+            className="mb-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-semibold text-sm px-3 py-2.5 transition-colors duration-micro ease-umeed"
           >
-            + New Chat
+            + New chat
           </button>
           {conversations.map((conv) => (
             <div
               key={conv.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '8px 10px',
-                borderRadius: '4px',
-                backgroundColor: conv.id === activeConversationId ? 'var(--umeed-orange-100)' : 'transparent',
-                cursor: 'pointer',
-              }}
+              className={`group flex items-center gap-1 rounded-lg px-2.5 py-2 cursor-pointer transition-colors duration-micro ease-umeed ${
+                conv.id === activeConversationId
+                  ? 'bg-primary-100 dark:bg-primary-900/40'
+                  : 'hover:bg-primary-50 dark:hover:bg-primary-900/20'
+              }`}
               onClick={() => renamingId !== conv.id && handleSelectConversation(conv.id)}
             >
               {renamingId === conv.id ? (
@@ -268,19 +222,10 @@ export default function ChatPage() {
                   onChange={(e) => setRenameValue(e.target.value)}
                   onBlur={() => handleRenameSubmit(conv.id)}
                   onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit(conv.id)}
-                  style={{ flex: 1, fontSize: '13px', padding: '2px 4px' }}
+                  className="flex-1 text-sm px-1.5 py-0.5 rounded border border-primary-300 dark:border-primary-700 bg-surface dark:bg-surface-dark text-ink-light dark:text-ink-dark outline-none"
                 />
               ) : (
-                <span style={{
-                  flex: 1,
-                  fontSize: '13px',
-                  color: 'var(--umeed-ink-900)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {conv.title}
-                </span>
+                <span className="flex-1 text-sm text-ink-light dark:text-ink-dark truncate">{conv.title}</span>
               )}
               <button
                 onClick={(e) => {
@@ -289,9 +234,9 @@ export default function ChatPage() {
                   setRenameValue(conv.title);
                 }}
                 aria-label="Rename conversation"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', opacity: 0.6 }}
+                className="opacity-0 group-hover:opacity-60 hover:!opacity-100 text-ink-muted transition-opacity duration-micro ease-umeed"
               >
-                ✎
+                <Icon name="pencil" className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={(e) => {
@@ -299,231 +244,74 @@ export default function ChatPage() {
                   handleDeleteConversation(conv.id);
                 }}
                 aria-label="Delete conversation"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', opacity: 0.6 }}
+                className="opacity-0 group-hover:opacity-60 hover:!opacity-100 text-ink-muted transition-opacity duration-micro ease-umeed"
               >
-                🗑
+                <Icon name="trash" className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}
         </div>
 
-        {/* Left: Messages Column */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          minWidth: 0,
-        }}>
-          {/* Header */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '20px',
-            paddingBottom: '16px',
-            borderBottom: '1px solid var(--umeed-orange-100)',
-          }}>
+        {/* Middle: Messages column */}
+        <div className="flex flex-col min-w-0">
+          <div className="flex justify-between items-center mb-5 pb-4 border-b border-primary-100 dark:border-primary-900/40">
             <div>
-              <h1 style={{
-                fontSize: '28px',
-                fontFamily: "'Fraunces', Georgia, serif",
-                fontWeight: 700,
-                color: 'var(--umeed-ink-900)',
-                margin: 0,
-              }}>
-                Umeed
-              </h1>
-              <p style={{
-                fontSize: '13px',
-                color: 'var(--umeed-ink-500)',
-                margin: '4px 0 0 0',
-              }}>
-                Your companion
-              </p>
+              <h1 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark m-0">Umeed</h1>
+              <p className="text-xs text-ink-muted mt-1">Your companion</p>
             </div>
             <Link
               href={ROUTES.crisis}
-              style={{
-                backgroundColor: 'var(--umeed-crisis-600)',
-                color: 'white',
-                padding: '8px 16px',
-                borderRadius: '9999px',
-                fontSize: '12px',
-                fontWeight: 700,
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-                transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
+              className="inline-flex items-center gap-1.5 rounded-pill bg-crisis-600 hover:bg-crisis-700 text-white text-xs font-bold px-4 py-2 transition-colors duration-micro ease-umeed whitespace-nowrap"
             >
+              <Icon name="shield" className="h-3.5 w-3.5" />
               Help Now
             </Link>
           </div>
 
-          {/* Messages Area */}
-          <div style={{
-            flex: 1,
-            overflowY: 'auto',
-            marginBottom: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            maxWidth: '640px',
-          }}>
+          <div className="flex-1 overflow-y-auto mb-5 flex flex-col gap-4 max-w-[640px]">
             {/* Greeting */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'flex-start',
-              gap: '12px',
-            }}>
-              <div style={{
-                backgroundColor: 'var(--umeed-orange-500)',
-                color: 'white',
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: '14px',
-                flexShrink: 0,
-              }}>
-                U
-              </div>
-              <div style={{
-                backgroundColor: 'var(--umeed-beige-200)',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                color: 'var(--umeed-ink-900)',
-                fontSize: '16px',
-                lineHeight: 1.5,
-                boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-                maxWidth: '500px',
-              }}>
+            <div className="flex justify-start gap-3">
+              <Avatar size="sm" />
+              <div className="bg-primary-50 dark:bg-primary-900/20 px-4 py-3 rounded-2xl rounded-tl-sm text-ink-light dark:text-ink-dark text-base leading-relaxed max-w-[500px]">
                 {greeting}
               </div>
             </div>
 
-            {/* Messages */}
             {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: 'flex',
-                  justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                  gap: '12px',
-                }}
-              >
-                {msg.role === 'assistant' && (
-                  <div style={{
-                    backgroundColor: 'var(--umeed-orange-500)',
-                    color: 'white',
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                    fontSize: '14px',
-                    flexShrink: 0,
-                  }}>
-                    U
-                  </div>
-                )}
-                <div style={{
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  lineHeight: 1.5,
-                  maxWidth: '500px',
-                  ...(msg.role === 'user' ? {
-                    backgroundColor: 'var(--umeed-orange-100)',
-                    color: 'var(--umeed-ink-900)',
-                  } : msg.messageType === 'pattern_insight' ? {
-                    backgroundColor: 'var(--umeed-green-600)',
-                    color: 'white',
-                  } : {
-                    backgroundColor: 'var(--umeed-beige-200)',
-                    color: 'var(--umeed-ink-900)',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-                  }),
-                }}>
+              <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {msg.role === 'assistant' && <Avatar size="sm" />}
+                <div
+                  className={`px-4 py-3 text-base leading-relaxed max-w-[500px] ${
+                    msg.role === 'user'
+                      ? 'bg-primary-600 text-white rounded-2xl rounded-tr-sm'
+                      : msg.messageType === 'pattern_insight'
+                        ? 'bg-primary-700 text-white rounded-2xl rounded-tl-sm'
+                        : 'bg-primary-50 dark:bg-primary-900/20 text-ink-light dark:text-ink-dark rounded-2xl rounded-tl-sm'
+                  }`}
+                >
                   {msg.messageType === 'pattern_insight' && (
-                    <div style={{
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      marginBottom: '8px',
-                      opacity: 0.9,
-                    }}>
+                    <div className="text-xs font-bold mb-2 opacity-90 flex items-center gap-1">
+                      <Icon name="sparkle" className="h-3 w-3" />
                       Pattern noticed
                     </div>
                   )}
-                  <p style={{ margin: 0 }}>{msg.content}</p>
+                  <p className="m-0">{msg.content}</p>
                 </div>
               </div>
             ))}
 
-            {/* Loading */}
             {loading && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                gap: '12px',
-              }}>
-                <div style={{
-                  backgroundColor: 'var(--umeed-orange-500)',
-                  color: 'white',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: '14px',
-                  flexShrink: 0,
-                }}>
-                  U
-                </div>
-                <div style={{
-                  backgroundColor: 'white',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    gap: '4px',
-                  }}>
-                    <div style={{
-                      width: '8px',
-                      height: '8px',
-                      backgroundColor: 'var(--umeed-orange-500)',
-                      borderRadius: '50%',
-                      animation: 'pulse 1s infinite',
-                    }} />
-                    <div style={{
-                      width: '8px',
-                      height: '8px',
-                      backgroundColor: 'var(--umeed-orange-500)',
-                      borderRadius: '50%',
-                      animation: 'pulse 1s infinite',
-                      animationDelay: '0.2s',
-                    }} />
-                    <div style={{
-                      width: '8px',
-                      height: '8px',
-                      backgroundColor: 'var(--umeed-orange-500)',
-                      borderRadius: '50%',
-                      animation: 'pulse 1s infinite',
-                      animationDelay: '0.4s',
-                    }} />
+              <div className="flex justify-start gap-3">
+                <Avatar size="sm" />
+                <div className="bg-surface dark:bg-surface-darker px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm">
+                  <div className="flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"
+                        style={{ animationDelay: `${i * 0.2}s` }}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
@@ -531,11 +319,7 @@ export default function ChatPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <form onSubmit={handleSendMessage} style={{
-            display: 'flex',
-            gap: '12px',
-          }}>
+          <form onSubmit={handleSendMessage} className="flex gap-3">
             <input
               id="chat-input"
               type="text"
@@ -543,199 +327,58 @@ export default function ChatPage() {
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
               placeholder="Type your thoughts..."
-              style={{
-                flex: 1,
-                padding: '12px 16px',
-                borderRadius: '9999px',
-                border: `1px solid var(--umeed-orange-100)`,
-                backgroundColor: 'white',
-                color: 'var(--umeed-ink-900)',
-                fontSize: '16px',
-                fontFamily: 'Inter, system-ui, sans-serif',
-                transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-                outline: 'none',
-                opacity: loading ? 0.5 : 1,
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'var(--umeed-orange-100)';
-              }}
+              className="flex-1 rounded-pill border border-primary-100 dark:border-primary-900/40 bg-surface dark:bg-surface-darker px-4 py-3 text-base text-ink-light dark:text-ink-dark outline-none transition-colors duration-quick ease-umeed focus:border-primary-500 disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={!input.trim() || loading}
               aria-label="Send message"
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--umeed-orange-500)',
-                color: 'white',
-                border: 'none',
-                cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '20px',
-                transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-                opacity: loading || !input.trim() ? 0.5 : 1,
-              }}
-              onMouseEnter={(e) => {
-                if (!loading && input.trim()) {
-                  e.currentTarget.style.backgroundColor = 'var(--umeed-orange-700)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-500)';
-              }}
+              className="h-12 w-12 rounded-full bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center transition-colors duration-quick ease-umeed disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              →
+              <Icon name="arrowRight" className="icon-inline" />
             </button>
           </form>
         </div>
 
         {/* Right: Sidebar */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '24px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '24px',
-          height: 'fit-content',
-          position: 'sticky',
-          top: '24px',
-        }}>
-          {/* Mood */}
+        <div className="rounded-card bg-surface dark:bg-surface-darker border border-primary-100 dark:border-primary-900/40 shadow-sm p-6 flex flex-col gap-6 h-fit sticky top-6">
           <div>
-            <h3 style={{
-              fontSize: '13px',
-              fontWeight: 700,
-              color: 'var(--umeed-ink-500)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              margin: '0 0 12px 0',
-            }}>
-              How you're feeling
-            </h3>
-            <div style={{
-              display: 'flex',
-              gap: '4px',
-            }}>
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-wide mb-3">How you&apos;re feeling</h3>
+            <div className="flex gap-1">
               {moodScores.map((score) => (
                 <button
                   key={score}
                   onClick={() => handleInlineMoodTap(score, '')}
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    border: `2px solid ${loggedMood === score ? 'var(--umeed-orange-500)' : 'var(--umeed-orange-100)'}`,
-                    backgroundColor: loggedMood === score ? 'var(--umeed-orange-100)' : 'white',
-                    color: 'var(--umeed-ink-900)',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '12px',
-                  }}
-                  title={['Really struggling', 'Not great', 'Okay', 'Good', 'Great'][score - 1]}
+                  title={MOOD_LABELS[score - 1]}
+                  className={`h-10 w-10 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-colors duration-quick ease-umeed ${
+                    loggedMood === score
+                      ? 'border-primary-500 bg-primary-100 dark:bg-primary-900/40 text-ink-light dark:text-ink-dark'
+                      : 'border-primary-100 dark:border-primary-900/40 bg-surface dark:bg-surface-dark text-ink-light dark:text-ink-dark hover:border-primary-300'
+                  }`}
                 >
                   {score}
                 </button>
               ))}
             </div>
-            <p style={{
-              fontSize: '13px',
-              color: 'var(--umeed-ink-500)',
-              margin: '8px 0 0 0',
-            }}>
-              {moodLabel}
-            </p>
+            <p className="text-xs text-ink-muted mt-2">{moodLabel}</p>
           </div>
 
-          {/* Comfort Mode */}
           <div>
-            <h3 style={{
-              fontSize: '13px',
-              fontWeight: 700,
-              color: 'var(--umeed-ink-500)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              margin: '0 0 12px 0',
-            }}>
-              Support style
-            </h3>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-            }}>
-              {COMFORT_MODES.map((mode) => (
-                <button
-                  key={mode.value}
-                  onClick={() => setComfortMode(mode.value)}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: '4px',
-                    border: `1px solid ${comfortMode === mode.value ? 'var(--umeed-orange-500)' : 'var(--umeed-orange-100)'}`,
-                    backgroundColor: comfortMode === mode.value ? 'var(--umeed-orange-100)' : 'white',
-                    color: 'var(--umeed-ink-900)',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (comfortMode !== mode.value) {
-                      e.currentTarget.style.backgroundColor = 'white';
-                    }
-                  }}
-                >
-                  {mode.label}
-                </button>
-              ))}
-            </div>
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-wide mb-3">Support style</h3>
+            <SegmentedControl
+              options={COMFORT_MODES}
+              value={comfortMode}
+              onChange={setComfortMode}
+              aria-label="Support style"
+            />
           </div>
 
-          {/* Profile Settings */}
-          <div>
-            <Link
-              href={ROUTES.profile}
-              style={{
-                display: 'block',
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: '4px',
-                backgroundColor: 'white',
-                border: `1px solid var(--umeed-orange-100)`,
-                color: 'var(--umeed-ink-900)',
-                fontWeight: 700,
-                fontSize: '14px',
-                cursor: 'pointer',
-                transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-                textDecoration: 'none',
-                textAlign: 'center',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-              }}
-            >
-              Profile Settings
-            </Link>
-          </div>
+          <Link
+            href={ROUTES.profile}
+            className="block w-full text-center rounded-lg border border-primary-100 dark:border-primary-900/40 bg-surface dark:bg-surface-dark text-ink-light dark:text-ink-dark font-semibold text-sm px-4 py-3 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors duration-quick ease-umeed"
+          >
+            Profile settings
+          </Link>
         </div>
       </div>
     </div>

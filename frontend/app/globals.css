@@ -2,22 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design Tokens - Light mode is default */
+/* Design Tokens - Light mode is default.
+   Var names kept as `umeed-orange-*`/`umeed-beige-*` for compatibility with
+   pages still on inline styles, but the values are the sage/dusty-blue system
+   — this is the single source of truth every page (Tailwind-token or
+   inline-style) ultimately reads from. */
 :root {
-  /* Primary Palette - Warm Orange */
-  --umeed-orange-500: #F46B1F;
-  --umeed-orange-700: #C4491A;
-  --umeed-orange-100: #FDE3CE;
+  /* Primary Palette - Muted Sage */
+  --umeed-orange-500: #7C9885;
+  --umeed-orange-700: #56705F;
+  --umeed-orange-100: #E2EBE3;
 
-  /* Neutrals (Warm) */
-  --umeed-beige-50: #FBF3E7;    /* Canvas/background */
-  --umeed-beige-200: #F2E4D0;   /* Surface/panels */
-  --umeed-ink-900: #3A2A1C;     /* Primary text */
-  --umeed-ink-500: #8C765F;     /* Secondary/muted */
+  /* Neutrals (warm off-white, cooled slightly toward slate) */
+  --umeed-beige-50: #F7F4EF;    /* Canvas/background */
+  --umeed-beige-200: #EDE8DE;   /* Surface/panels */
+  --umeed-ink-900: #3D3A33;     /* Primary text */
+  --umeed-ink-500: #8A8578;     /* Secondary/muted */
 
   /* Semantic */
-  --umeed-green-600: #3F7D4E;   /* Pattern insight ONLY */
-  --umeed-crisis-600: #C0392B;  /* Crisis mode ONLY */
+  --umeed-green-600: #56705F;   /* Pattern insight ONLY — reuses sage-700 */
+  --umeed-crisis-600: #C0392B;  /* Crisis mode ONLY — unchanged, safety-critical */
+
+  /* Signature lattice texture (jali pattern), used sparingly */
+  --jali-line: rgba(61, 58, 51, 0.055);
 
   /* Motion */
   --ease-umeed: cubic-bezier(0.22, 1, 0.36, 1);
@@ -30,12 +37,13 @@
 
 /* Dark Mode - Only applies when .dark class is explicitly set */
 :root.dark {
-  --umeed-beige-50: #241811;
-  --umeed-beige-200: #342418;
-  --umeed-ink-900: #F5F0EA;
-  --umeed-ink-500: #C4B3A0;
-  --umeed-orange-500: #FF8A42;
-  --umeed-orange-700: #FFAA5F;
+  --umeed-beige-50: #20241F;
+  --umeed-beige-200: #2B302A;
+  --umeed-ink-900: #EDEBE7;
+  --umeed-ink-500: #A8A296;
+  --umeed-orange-500: #93AC97;
+  --umeed-orange-700: #ACC2AE;
+  --jali-line: rgba(237, 235, 231, 0.05);
   color-scheme: dark;
 }
 
@@ -107,6 +115,24 @@ select:focus-visible {
   height: 1.2em;
   width: 1.2em;
   flex-shrink: 0;
+}
+
+/* Signature texture: a quiet crossed-hairline lattice, echoing the jali
+   screens used in South-Asian architecture to filter light without blocking
+   it — used sparingly (hero backdrops, empty states), never under body text. */
+.jali-bg {
+  background-image:
+    repeating-linear-gradient(45deg, var(--jali-line) 0 1.5px, transparent 1.5px 26px),
+    repeating-linear-gradient(-45deg, var(--jali-line) 0 1.5px, transparent 1.5px 26px);
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 700ms var(--ease-umeed) both;
 }
 
 /* Reduced motion accessibility */

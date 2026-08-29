@@ -58,7 +58,7 @@ export function BottomNav({ active }: BottomNavProps) {
                 transition-all duration-micro ease-umeed
                 ${
                   isActive
-                    ? 'bg-secondary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300'
+                    ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
                     : 'text-ink-muted hover:text-primary-500'
                 }`}
             >
