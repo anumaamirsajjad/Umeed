@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { sendMessage, startNewChat, getPreferences, getMoodCheckinStatus, submitMoodCheckin } from '@/lib/api';
+import { sendMessage, listConversations, getConversation, renameConversation, deleteConversation, getPreferences, getMoodCheckinStatus, submitMoodCheckin } from '@/lib/api';
 import { MoodCheckinModal } from '@/components/common/MoodCheckinModal';
 import { ROUTES, CRISIS_ALERT_STORAGE_KEY } from '@/lib/constants';
 import { useRequireAuth } from '@/lib/useRequireAuth';
-import type { ChatMessage, ComfortMode, UserPreferences } from '@/lib/types';
+import type { ChatMessage, ComfortMode, Conversation, UserPreferences } from '@/lib/types';
 
 // Add pulse animation keyframes
 if (typeof document !== 'undefined' && !document.querySelector('#umeed-animations')) {
@@ -38,6 +38,10 @@ export default function ChatPage() {
   const [comfortMode, setComfortMode] = useState<ComfortMode>('just_listen');
   const [showMoodCheckin, setShowMoodCheckin] = useState(false);
   const [loggedMood, setLoggedMood] = useState<number | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
 
@@ -51,6 +55,17 @@ export default function ChatPage() {
     getMoodCheckinStatus()
       .then((status) => setShowMoodCheckin(!status.checkedInToday))
       .catch((err) => console.warn('Could not load mood status:', err));
+
+    listConversations()
+      .then(async (list) => {
+        setConversations(list);
+        if (list.length > 0) {
+          const { messages: loadedMessages } = await getConversation(list[0].id);
+          setActiveConversationId(list[0].id);
+          setMessages(loadedMessages);
+        }
+      })
+      .catch((err) => console.warn('Could not load conversations:', err));
   }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
@@ -72,13 +87,47 @@ export default function ChatPage() {
     }
   };
 
-  const handleNewChat = async () => {
+  const handleNewChat = () => {
     setMessages([]);
     setInput('');
+    setActiveConversationId(null);
+  };
+
+  const handleSelectConversation = async (id: string) => {
+    if (id === activeConversationId) return;
     try {
-      await startNewChat();
+      const { messages: loadedMessages } = await getConversation(id);
+      setActiveConversationId(id);
+      setMessages(loadedMessages);
     } catch (err) {
-      console.warn('Could not clear server-side chat session:', err);
+      console.warn('Could not load conversation:', err);
+    }
+  };
+
+  const handleRenameSubmit = async (id: string) => {
+    const title = renameValue.trim();
+    setRenamingId(null);
+    if (!title) return;
+    try {
+      await renameConversation(id, title);
+      const list = await listConversations();
+      setConversations(list);
+    } catch (err) {
+      console.warn('Could not rename conversation:', err);
+    }
+  };
+
+  const handleDeleteConversation = async (id: string) => {
+    if (!window.confirm('Delete this conversation?')) return;
+    try {
+      await deleteConversation(id);
+      const list = await listConversations();
+      setConversations(list);
+      if (id === activeConversationId) {
+        handleNewChat();
+      }
+    } catch (err) {
+      console.warn('Could not delete conversation:', err);
     }
   };
 
@@ -96,6 +145,7 @@ export default function ChatPage() {
         message: input,
         preferences: preferences || undefined,
         comfortMode,
+        conversationId: activeConversationId ?? undefined,
       });
 
       const assistantMessage: ChatMessage = {
@@ -105,6 +155,11 @@ export default function ChatPage() {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      if (response.conversationId !== activeConversationId) {
+        setActiveConversationId(response.conversationId);
+      }
+      listConversations().then(setConversations).catch(() => {});
 
       if (response.isCrisis && response.crisisAlert) {
         // Server-side crisis detection is the safety net — always escalate to
@@ -153,15 +208,104 @@ export default function ChatPage() {
         onClose={() => setShowMoodCheckin(false)}
       />
 
-      {/* Two-column layout: messages (left) + sidebar (right) */}
+      {/* Three-column layout: conversations (left) + messages (center) + sidebar (right) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 300px',
+        gridTemplateColumns: '240px 1fr 300px',
         gap: '30px',
         flex: 1,
         overflow: 'hidden',
         padding: '24px',
       }}>
+
+        {/* Conversation list column */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          padding: '16px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          overflowY: 'auto',
+          height: 'fit-content',
+          maxHeight: '100%',
+        }}>
+          <button
+            onClick={handleNewChat}
+            style={{
+              padding: '10px 12px',
+              borderRadius: '4px',
+              backgroundColor: 'var(--umeed-orange-500)',
+              color: 'white',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '14px',
+              cursor: 'pointer',
+              marginBottom: '8px',
+            }}
+          >
+            + New Chat
+          </button>
+          {conversations.map((conv) => (
+            <div
+              key={conv.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '8px 10px',
+                borderRadius: '4px',
+                backgroundColor: conv.id === activeConversationId ? 'var(--umeed-orange-100)' : 'transparent',
+                cursor: 'pointer',
+              }}
+              onClick={() => renamingId !== conv.id && handleSelectConversation(conv.id)}
+            >
+              {renamingId === conv.id ? (
+                <input
+                  autoFocus
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onBlur={() => handleRenameSubmit(conv.id)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit(conv.id)}
+                  style={{ flex: 1, fontSize: '13px', padding: '2px 4px' }}
+                />
+              ) : (
+                <span style={{
+                  flex: 1,
+                  fontSize: '13px',
+                  color: 'var(--umeed-ink-900)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {conv.title}
+                </span>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRenamingId(conv.id);
+                  setRenameValue(conv.title);
+                }}
+                aria-label="Rename conversation"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', opacity: 0.6 }}
+              >
+                ✎
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteConversation(conv.id);
+                }}
+                aria-label="Delete conversation"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', opacity: 0.6 }}
+              >
+                🗑
+              </button>
+            </div>
+          ))}
+        </div>
 
         {/* Left: Messages Column */}
         <div style={{
@@ -561,33 +705,6 @@ export default function ChatPage() {
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* New Chat */}
-          <div>
-            <button
-              onClick={handleNewChat}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: '4px',
-                backgroundColor: 'white',
-                border: `1px solid var(--umeed-orange-500)`,
-                color: 'var(--umeed-orange-500)',
-                fontWeight: 700,
-                fontSize: '14px',
-                cursor: 'pointer',
-                transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-              }}
-            >
-              Start Over
-            </button>
           </div>
 
           {/* Profile Settings */}
