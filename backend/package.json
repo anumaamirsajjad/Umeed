@@ -15,7 +15,9 @@
     "test:crisis-detection": "node --loader ts-node/esm --experimental-specifier-resolution=node src/tests/crisisDetection.test.ts",
     "test:jwt-secret": "node --loader ts-node/esm --experimental-specifier-resolution=node src/tests/jwtSecret.test.ts",
     "test:system-prompt": "node --loader ts-node/esm --experimental-specifier-resolution=node src/tests/systemPromptValidation.test.ts",
-    "test": "npm run test:crisis-detection && npm run test:jwt-secret && npm run test:crisis-classifier && npm run test:system-prompt"
+    "test:system-prompt-personalization": "node --loader ts-node/esm --experimental-specifier-resolution=node src/tests/systemPromptPersonalization.test.ts",
+    "test:pattern-detection": "node --loader ts-node/esm --experimental-specifier-resolution=node src/tests/patternDetection.test.ts",
+    "test": "npm run test:crisis-detection && npm run test:jwt-secret && npm run test:crisis-classifier && npm run test:system-prompt && npm run test:system-prompt-personalization && npm run test:pattern-detection"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",

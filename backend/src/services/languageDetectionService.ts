@@ -1,4 +1,4 @@
-import type { DetectedLanguage } from './sessionService.js';
+import type { DetectedLanguage } from '../types/index.js';
 
 /**
  * Lightweight heuristic language/register detection (no extra LLM call).

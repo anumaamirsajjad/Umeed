@@ -1,6 +1,6 @@
 import express from 'express';
 import { requireAuth } from '../middleware/authMiddleware.js';
-import { handleChat, handleNewChat } from '../controllers/chatController.js';
+import { handleChat } from '../controllers/chatController.js';
 
 const router = express.Router();
 
@@ -12,6 +12,7 @@ const router = express.Router();
  * Request body:
  * {
  *   message: string;        // User's message
+ *   conversationId?: string; // Existing conversation to continue; omit to start a new one
  *   preferences?: {         // Optional user preferences from onboarding
  *     preferredSupportStyle?: 'family_community' | 'professional' | 'solo' | 'mixed';
  *     topicsToAvoid?: string[];
@@ -23,6 +24,7 @@ const router = express.Router();
  * Response:
  * {
  *   id: string;                    // Message ID
+ *   conversationId: string;        // Conversation this message belongs to
  *   message: string;               // Claude's response
  *   isCrisis: boolean;             // Whether crisis language detected
  *   crisisAlert?: {                // Alert if crisis detected
@@ -34,12 +36,5 @@ const router = express.Router();
  * }
  */
 router.post('/', requireAuth, handleChat);
-
-/**
- * POST /chat/new
- * Clears server-side conversation memory for this user, starting a fresh chat.
- * Requires: Authorization header with Bearer token
- */
-router.post('/new', requireAuth, handleNewChat);
 
 export default router;

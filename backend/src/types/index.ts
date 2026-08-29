@@ -19,6 +19,16 @@ export interface ChatMessage {
   content: string;
 }
 
+// Detected language/register of a user's message (see languageDetectionService).
+// Originally lived on sessionService.ts; moved here when sessionService was
+// removed in favor of conversationService, since systemPrompt.ts, claudeService.ts,
+// and languageDetectionService.ts all depend on it independent of session storage.
+export type DetectedLanguage =
+  | 'english'
+  | 'roman_urdu'
+  | 'roman_punjabi'
+  | 'code_switched';
+
 // Persisted Conversation (one thread in a user's chat history)
 export interface Conversation {
   id: string;

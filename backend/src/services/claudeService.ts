@@ -1,8 +1,7 @@
 import env from '../config/env.js';
 import buildSystemPrompt from '../config/systemPrompt.js';
 import { buildPatternSection, type DetectedPattern } from './patternDetectionService.js';
-import type { UserPreferences, ChatMessage } from '../types/index.js';
-import type { DetectedLanguage } from './sessionService.js';
+import type { UserPreferences, ChatMessage, DetectedLanguage } from '../types/index.js';
 import { logger } from '../utils/logger.js';
 
 const OPENROUTER_API_KEY = env.ANTHROPIC_API_KEY; // Using same env var for OpenRouter key
