@@ -198,7 +198,7 @@ See [docs/CRISIS_DETECTION.md](./docs/CRISIS_DETECTION.md) for test cases.
 NODE_ENV=development
 PORT=5000
 ANTHROPIC_API_KEY=sk-...
-JWT_SECRET=your-secret-key-change-in-production
+JWT_SECRET=  # generate: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 CORS_ORIGIN=http://localhost:3000
 ```
 
@@ -223,12 +223,11 @@ NEXT_PUBLIC_API_URL=http://localhost:5000
 2. Password reset functionality
 3. Rate limiting (prevent brute force)
 4. Persistent encrypted chat history
-5. Move JWT_SECRET to secure config
-6. Enable HTTPS
-7. Database migration (PostgreSQL)
-8. Admin dashboard
-9. Load testing and optimization
-10. Penetration testing
+5. Enable HTTPS
+6. Database migration (PostgreSQL)
+7. Admin dashboard
+8. Load testing and optimization
+9. Penetration testing
 
 ## Contributing
 

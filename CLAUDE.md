@@ -86,7 +86,7 @@ Three main tables:
 
 **Frontend:** Vercel (automatic on main branch push)  
 **Backend:** Render or Railway (automatic on main branch push)  
-Env vars: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `NEXT_PUBLIC_API_URL`
+Env vars: `ANTHROPIC_API_KEY`, `JWT_SECRET`, `DATABASE_URL`, `NEXT_PUBLIC_API_URL`
 
 ## Testing Checklist (Day 7)
 

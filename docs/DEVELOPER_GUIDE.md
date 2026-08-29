@@ -8,7 +8,7 @@ and file map. This doc covers day-to-day dev workflow.
 ```bash
 # Backend — http://localhost:5000
 cd backend
-cp .env.example .env   # set ANTHROPIC_API_KEY at minimum
+cp .env.example .env   # set ANTHROPIC_API_KEY and JWT_SECRET at minimum
 npm install
 npm run dev
 
