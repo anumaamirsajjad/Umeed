@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { clearStoredAuth } from './authStorage';
+import { clearStoredAuth, getStoredAuth } from './authStorage';
 import { ROUTES } from './constants';
 import type {
   ChatRequest,
@@ -24,7 +24,7 @@ const client: AxiosInstance = axios.create({
 
 // Add auth token to every request
 client.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+  const { token } = getStoredAuth();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -151,7 +151,6 @@ export const getResources = async (filters?: {
   country?: string;
   city?: string;
   type?: string;
-  userId?: string;
 }): Promise<ResourcesResponse> => {
   const { data } = await client.get('/resources', { params: filters });
   return data;

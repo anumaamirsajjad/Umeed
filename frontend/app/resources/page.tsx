@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/authContext';
 import { getResources, searchResources } from '@/lib/api';
 import { ACTIVE_CITY_FILTERS, ACTIVE_REGION } from '@/lib/cities';
 import type { CrisisResource } from '@/lib/types';
@@ -181,9 +180,6 @@ function ResourceCardSkeleton() {
 }
 
 export default function ResourcesPage() {
-  const { user } = useAuth();
-  const userId = user?.id;
-
   const [matched, setMatched] = useState<CrisisResource[]>([]);
   const [other, setOther] = useState<CrisisResource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -206,7 +202,6 @@ export default function ResourcesPage() {
 
         const params: any = { region: ACTIVE_REGION };
         if (selectedCity) params.city = selectedCity;
-        if (userId) params.userId = userId;
 
         const data = await getResources(params);
         setMatched(data.matched);
@@ -219,7 +214,7 @@ export default function ResourcesPage() {
     };
 
     fetchResources();
-  }, [selectedCity, debouncedSearch, userId]);
+  }, [selectedCity, debouncedSearch]);
 
   const isSearching = search.trim().length >= 2;
 
