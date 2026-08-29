@@ -42,6 +42,12 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M21 20c0-2.6-1.7-4.8-4-5.6" />
     </>
   ),
+  user: (
+    <>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7" />
+    </>
+  ),
   flag: <path d="M6 3v18M6 4h11l-2.5 3.5L17 11H6" />,
   leaf: <path d="M5 19c8 0 14-6 14-14 0 0-9 0-13 4S5 19 5 19z" />,
   house: <path d="M4 11l8-7 8 7v8a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1v-8z" />,

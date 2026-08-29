@@ -11,6 +11,7 @@ const NAV_ITEMS: { label: string; urdu: string; href: string; icon: IconName }[]
   { label: 'Talk', urdu: 'گفتگو', href: ROUTES.chat, icon: 'chat' },
   { label: 'My Plan', urdu: 'میری منصوبہ', href: ROUTES.safetyPlanView, icon: 'compass' },
   { label: 'Support', urdu: 'معاونت', href: ROUTES.resources, icon: 'lifebuoy' },
+  { label: 'Profile', urdu: 'پروفائل', href: ROUTES.profile, icon: 'user' },
 ];
 
 export function SidebarNav() {
