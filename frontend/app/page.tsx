@@ -4,20 +4,23 @@ import { Card } from '@/components/ui/Card';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { MoonToggle } from '@/components/common/MoonToggle';
 
-const FEATURES: { icon: IconName; title: string; body: string }[] = [
+const FEATURES: { icon: IconName; title: string; urdu: string; body: string }[] = [
   {
     icon: 'chat',
     title: 'Talk, your way',
+    urdu: 'گفتگو کریں',
     body: "Tell us how you'd rather be supported — family, professional, or working through it solo. We adapt to what you say, never to assumptions about who you are.",
   },
   {
     icon: 'compass',
     title: "A safety plan that's yours",
+    urdu: 'منصوبہ بنائیں',
     body: 'Build a plan for hard days — warning signs, coping strategies, people you trust — and export it whenever you need it.',
   },
   {
     icon: 'lifebuoy',
     title: 'Real resources, nearby',
+    urdu: 'وسائل',
     body: 'Crisis lines and professional support, filtered to your region — always one tap away, whether or not you’re signed in.',
   },
 ];
@@ -66,6 +69,14 @@ export default function LandingPage() {
               Support that meets you <em className="italic text-primary-700 dark:text-primary-300">where you are</em>.
             </h1>
             <p
+              className="animate-fade-up font-nastaliq text-xl font-bold text-primary-700 dark:text-primary-300"
+              style={{ animationDelay: '40ms' }}
+              lang="ur"
+              dir="rtl"
+            >
+              امید سے بات کریں
+            </p>
+            <p
               className="animate-fade-up text-lead text-ink-muted max-w-xl mx-auto"
               style={{ animationDelay: '90ms' }}
             >
@@ -105,7 +116,12 @@ export default function LandingPage() {
                 >
                   <Icon name={f.icon} className="icon-inline" />
                 </div>
-                <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark">{f.title}</h2>
+                <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark flex items-baseline gap-2">
+                  {f.title}
+                  <span className="font-nastaliq text-sm text-primary-600 dark:text-primary-300" lang="ur" dir="rtl">
+                    {f.urdu}
+                  </span>
+                </h2>
                 <p className="text-sm text-ink-muted">{f.body}</p>
               </Card>
             ))}
