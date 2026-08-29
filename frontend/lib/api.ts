@@ -4,6 +4,8 @@ import { ROUTES } from './constants';
 import type {
   ChatRequest,
   ChatResponse,
+  ChatMessage,
+  Conversation,
   UserPreferences,
   OnboardingResponse,
   SafetyPlan,
@@ -68,8 +70,29 @@ export const sendMessage = async (req: Omit<ChatRequest, 'userId'>): Promise<Cha
   return data;
 };
 
-export const startNewChat = async (): Promise<void> => {
-  await client.post('/chat/new', {});
+// Conversation endpoints
+export const listConversations = async (): Promise<Conversation[]> => {
+  const { data } = await client.get('/conversations');
+  return data;
+};
+
+export const getConversation = async (
+  id: string
+): Promise<{ conversation: Conversation; messages: ChatMessage[] }> => {
+  const { data } = await client.get(`/conversations/${id}`);
+  return data;
+};
+
+export const renameConversation = async (
+  id: string,
+  title: string
+): Promise<Conversation> => {
+  const { data } = await client.patch(`/conversations/${id}`, { title });
+  return data;
+};
+
+export const deleteConversation = async (id: string): Promise<void> => {
+  await client.delete(`/conversations/${id}`);
 };
 
 // Onboarding endpoints
