@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/authContext';
 import { getResources, searchResources } from '@/lib/api';
 import { ACTIVE_CITY_FILTERS, ACTIVE_REGION } from '@/lib/cities';
 import type { CrisisResource } from '@/lib/types';
@@ -180,12 +181,8 @@ function ResourceCardSkeleton() {
 }
 
 export default function ResourcesPage() {
-  const [userId] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('userId') || '';
-    }
-    return '';
-  });
+  const { user } = useAuth();
+  const userId = user?.id;
 
   const [matched, setMatched] = useState<CrisisResource[]>([]);
   const [other, setOther] = useState<CrisisResource[]>([]);
