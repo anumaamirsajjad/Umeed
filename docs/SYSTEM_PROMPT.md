@@ -255,6 +255,6 @@ If you can't confidently answer "yes" to Q1-5, don't deploy.
 
 ---
 
-**Last updated:** 2026-08-21  
+**Last updated:** 2026-08-30  
 **Next major review:** Day 3 of build (prompt refinement iteration)  
-**Deployed version:** 1.2 (personalization added)
+**Deployed version:** 1.3 (topicsOfConcern fix)

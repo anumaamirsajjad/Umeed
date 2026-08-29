@@ -15,14 +15,14 @@ if you're in crisis, it will always surface real crisis resources alongside the 
    - **Problem-solve** — help thinking through next steps
    - **Distract** — a lighter, different-topic conversation
    - **Guide** — step-by-step suggestions
-   - **Sidebar** — past conversations are listed on the left and can be reopened, renamed, or deleted.
-3. **Mood check-in** (`/mood`) — a quick emoji check-in, with a 7-day trend chart so you can
+3. **Sidebar** — past conversations are listed on the left and can be reopened, renamed, or deleted.
+4. **Mood check-in** (`/mood`) — a quick emoji check-in, with a 7-day trend chart so you can
    see how you've been.
-4. **Safety plan** (`/safety-plan/builder`) — build a personal safety plan: warning signs,
+5. **Safety plan** (`/safety-plan/builder`) — build a personal safety plan: warning signs,
    coping strategies, trusted contacts, and reasons to stay safe. You can pull in suggestions
    drawn from things you've mentioned in chat, then edit anything before saving. Export it as
    a PDF to keep or share.
-5. **Resources** (`/resources`) — a directory of crisis hotlines and professional resources,
+6. **Resources** (`/resources`) — a directory of crisis hotlines and professional resources,
    filterable and searchable, with a section prioritized to match your stated preferences.
 
 ## If You're in Crisis
@@ -42,7 +42,4 @@ hotline directly — see the Resources page for numbers in your region.**
 - It does not assume anything about your culture, religion, or family structure — it only
   responds to what you tell it during onboarding or in conversation.
 
-## What Umeed Saves
-
-- Your chat history is saved so you can revisit past conversations at any time, rename them for easy reference, or delete them if you wish.
-- Your preferences from onboarding and any safety plans you create are also saved and can be edited anytime.
+It does save your chat history so you can revisit past conversations at any time, rename them for easy reference, or delete them if you wish. Your preferences from onboarding and any safety plans you create are also saved and can be edited anytime.

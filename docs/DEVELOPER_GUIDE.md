@@ -20,7 +20,7 @@ npm run dev
 ```
 
 Data persists to `backend/data/*.json` (gitignored) via `db/jsonStore.ts` — a minimal
-file-backed key/value store, not a real database. This includes user preferences, safety plans, 
+file-backed key/value store, not a real database. This includes user preferences, safety plans,
 conversations, messages, and mood check-ins. Delete that directory to reset local state.
 
 ## Testing

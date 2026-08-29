@@ -34,11 +34,11 @@
 
 ### Backend (Node.js/Express)
 - `backend/src/index.ts` — Entry point
-- `backend/src/config/systemPrompt.ts` — **THE CRITICAL PIECE** — Claude system prompt with guardrails
+- `backend/src/config/systemPrompt.ts` — **THE CRITICAL PIECE** — system prompt with guardrails
 - `backend/src/services/claudeService.ts` — LLM API wrapper (OpenRouter)
 - `backend/src/services/crisisDetectionService.ts` — Crisis language detection logic
 - `backend/src/controllers/chatController.ts` — Chat endpoint logic
-- `backend/src/db/schema.ts` — Database structure documentation (user preferences, safety plans, conversations, and messages)
+- `backend/src/db/schema.ts` — Database structure documentation (user preferences, safety plans, conversations, and messages); see `conversationService.ts` for runtime implementation
 - `backend/src/routes/*.ts` — API endpoints
 
 ### Frontend (React/Next.js)
