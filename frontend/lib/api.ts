@@ -1,4 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
+import { clearStoredAuth } from './authStorage';
+import { ROUTES } from './constants';
 import type {
   ChatRequest,
   ChatResponse,
@@ -28,6 +30,31 @@ client.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// A 401 on any protected endpoint means the session is gone (expired token,
+// cleared storage, forged/invalid token) — clear local auth state and send
+// the user to /login instead of leaving them on a page that looks logged in
+// but silently fails every action. Login/signup's own 401s (wrong password)
+// are excluded — those pages already show that error inline and must not be
+// redirected away from themselves.
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const url: string = error.config?.url || '';
+    const isAuthEndpoint = url.startsWith('/auth/');
+    if (
+      typeof window !== 'undefined' &&
+      error.response?.status === 401 &&
+      !isAuthEndpoint
+    ) {
+      clearStoredAuth();
+      if (window.location.pathname !== ROUTES.login) {
+        window.location.href = ROUTES.login;
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Health check
 export const health = async (): Promise<{ status: string }> => {
