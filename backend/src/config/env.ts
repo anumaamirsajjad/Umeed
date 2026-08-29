@@ -34,9 +34,9 @@ export const env = {
 if (!env.ANTHROPIC_API_KEY) {
   throw new Error('ANTHROPIC_API_KEY environment variable is required');
 }
-if (!env.JWT_SECRET) {
+if (!env.JWT_SECRET || env.JWT_SECRET.length < 32) {
   throw new Error(
-    'JWT_SECRET environment variable is required (no default — a shared fallback would let anyone forge auth tokens). Generate one with: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))"'
+    'JWT_SECRET environment variable is required and must be at least 32 characters (no default — a shared or weak fallback would let anyone forge auth tokens). Generate one with: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))"'
   );
 }
 

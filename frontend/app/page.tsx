@@ -366,10 +366,10 @@ export default function Home() {
             marginBottom: '32px',
             opacity: 0.95,
           }}>
-            No account needed. Your privacy is protected. Begin whenever you are ready.
+            Your privacy is protected. Begin whenever you are ready.
           </p>
           <Link
-            href={ROUTES.onboarding}
+            href={ROUTES.signup}
             style={{
               display: 'inline-block',
               backgroundColor: 'white',

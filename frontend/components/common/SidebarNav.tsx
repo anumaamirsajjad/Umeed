@@ -22,7 +22,7 @@ export function SidebarNav() {
 
   const handleLogout = () => {
     logout();
-    router.push(ROUTES.login);
+    router.replace(ROUTES.login);
   };
 
   return (
