@@ -48,7 +48,8 @@
 - `frontend/app/safety-plan/builder/page.tsx` — Safety plan builder
 - `frontend/app/safety-plan/view/page.tsx` — View/export safety plan
 - `frontend/app/resources/page.tsx` — Filterable resource directory
-- `frontend/components/common/CrisisAlert.tsx` — **Crisis escalation UI** — always visible when triggered
+- `frontend/app/crisis/page.tsx` — **Crisis escalation UI ("Safety Mode")** — full-page redirect from chat (via `sessionStorage` handoff, not an inline component); displays crisis resources full-screen
+- `frontend/app/crisis/breathe/page.tsx` — Breathing exercise sub-screen linked from Safety Mode
 
 ### Documentation
 - `docs/CRISIS_DETECTION.md` — Crisis detection test cases, phrasings, expected responses

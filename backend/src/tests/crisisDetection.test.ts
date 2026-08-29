@@ -75,6 +75,17 @@ const testCases: CrisisTestCase[] = [
     category: 'high_severity',
   },
   {
+    // Regression guard: medication context must NOT suppress escalation when an
+    // actual additional risk signal (here "overdosed") is also present — the
+    // negation-context suppression only applies to a bare, sole "suicide/suicidal"
+    // mention (see isSuppressedGenericMention in crisisDetectionService.ts).
+    name: 'Medication context + real risk signal - overdosed on antidepressants on purpose',
+    input: 'I overdosed on my antidepressants on purpose',
+    shouldDetect: true,
+    expectedSeverity: 'critical',
+    category: 'high_severity',
+  },
+  {
     name: 'Hanging intention',
     input: 'I am going to hang myself',
     shouldDetect: true,
@@ -212,6 +223,18 @@ const testCases: CrisisTestCase[] = [
   {
     name: 'Asking for help - crisis resources',
     input: 'I need help. Can you connect me with crisis resources?',
+    shouldDetect: false,
+    category: 'false_negative_check',
+  },
+  {
+    name: 'Medication side effect - antidepressant made me suicidal',
+    input: 'The antidepressant made me suicidal at first',
+    shouldDetect: false,
+    category: 'false_negative_check',
+  },
+  {
+    name: 'Medication side effect - general medication info',
+    input: 'Some medications can increase suicidal thoughts',
     shouldDetect: false,
     category: 'false_negative_check',
   },

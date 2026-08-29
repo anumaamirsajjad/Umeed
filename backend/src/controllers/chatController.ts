@@ -107,6 +107,38 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
       ]);
     } catch (error) {
       logger.error('Claude API error', error);
+
+      // Fail-safe: sendMessage() is the only thing that can throw here
+      // (classifyCrisisRisk never throws — it fails safe to 'ambiguous'
+      // internally). crisisResult was already computed above, independent
+      // of the LLM call — don't let a provider/timeout error silently
+      // discard a real crisis signal on top of failing to reply at all.
+      if (crisisResult.isCrisis) {
+        const fallbackMessage =
+          "I'm having trouble responding right now, but I don't want that to get in the way of you having support.";
+
+        conversationService.appendMessage(conversation.id, userId, 'user', message);
+        conversationService.appendMessage(conversation.id, userId, 'assistant', fallbackMessage);
+
+        const crisisHotlines = await getTopCrisisResources(userId, 3);
+
+        const fallbackResponse: ChatResponse = {
+          id: `msg-${Date.now()}`,
+          conversationId: conversation.id,
+          message: fallbackMessage,
+          isCrisis: true,
+          crisisAlert: {
+            triggered: true,
+            severity: crisisResult.severity === 'critical' ? 'critical' : 'high',
+            message: 'If you\'re in crisis, please reach out for help immediately.',
+            resources: crisisHotlines,
+          },
+        };
+
+        res.json(fallbackResponse);
+        return;
+      }
+
       res.status(500).json({
         error: 'Failed to get response from Claude',
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -125,9 +157,10 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
       claudeResponse = claudeResponse.replace(PATTERN_INSIGHT_MARKER, '').trimEnd();
     }
 
-    // Combine both independent safety layers — either one flagging is enough to escalate
-    // Only escalate on ACUTE classifier signals (not ambiguous/failsafe)
-    const classifierEscalates = classification.riskLevel === 'acute';
+    // Combine both independent safety layers — either one flagging is enough to escalate.
+    // 'ambiguous' escalates too (gentler framing below) per the project's safety
+    // philosophy: ambiguous language → escalate, never silently pass over it.
+    const classifierEscalates = classification.riskLevel === 'acute' || classification.riskLevel === 'ambiguous';
     const isCrisis = crisisResult.isCrisis || classifierEscalates;
     const isAcute = classification.riskLevel === 'acute' || crisisResult.severity === 'critical';
     const severity: 'high' | 'critical' | undefined = isCrisis ? (isAcute ? 'critical' : 'high') : undefined;

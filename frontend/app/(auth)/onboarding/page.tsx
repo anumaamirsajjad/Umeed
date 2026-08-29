@@ -8,6 +8,7 @@ import type { UserPreferences } from '@/lib/types';
 import {
   SUPPORT_STYLE_OPTIONS,
   TOPICS_OF_CONCERN,
+  COMMON_TOPICS_TO_AVOID,
   LANGUAGES,
   ROUTES,
 } from '@/lib/constants';
@@ -64,6 +65,14 @@ export default function Onboarding() {
       ? current.filter((t) => t !== topic)
       : [...current, topic];
     setPreferences({ ...preferences, topicsOfConcern: updated });
+  };
+
+  const handleAvoidTopicToggle = (topic: string) => {
+    const current = preferences.topicsToAvoid || [];
+    const updated = current.includes(topic)
+      ? current.filter((t) => t !== topic)
+      : [...current, topic];
+    setPreferences({ ...preferences, topicsToAvoid: updated });
   };
 
   const handleSupportStyleChange = (style: string) => {
@@ -319,6 +328,107 @@ export default function Onboarding() {
                   </button>
                 );
               })}
+            </div>
+
+            <h2 style={{
+              fontSize: '20px',
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontWeight: 700,
+              color: 'var(--umeed-ink-900)',
+              margin: '0 0 8px 0',
+            }}>
+              Anything you'd rather I steer away from?
+            </h2>
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--umeed-ink-500)',
+              marginBottom: '16px',
+              lineHeight: 1.6,
+            }}>
+              Optional. I'll acknowledge these if they come up but won't push deeper.
+            </p>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '12px',
+              marginBottom: '32px',
+            }} role="group" aria-label="Topics to avoid">
+              {COMMON_TOPICS_TO_AVOID.map((topic) => {
+                const selected = preferences.topicsToAvoid?.includes(topic) || false;
+                return (
+                  <button
+                    key={topic}
+                    onClick={() => handleAvoidTopicToggle(topic)}
+                    style={{
+                      padding: '16px 12px',
+                      borderRadius: '8px',
+                      border: selected ? 'none' : `1px solid var(--umeed-orange-100)`,
+                      backgroundColor: selected ? 'var(--umeed-orange-500)' : 'white',
+                      color: selected ? 'white' : 'var(--umeed-ink-900)',
+                      fontWeight: 700,
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      transition: 'all 300ms',
+                      textAlign: 'center',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!selected) {
+                        e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!selected) {
+                        e.currentTarget.style.backgroundColor = 'white';
+                      }
+                    }}
+                  >
+                    {topic}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ marginBottom: '32px' }}>
+              <label htmlFor="cultural-context-input" style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: 700,
+                color: 'var(--umeed-ink-900)',
+                marginBottom: '8px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                Anything about your background or culture you'd like me to keep in mind? Optional.
+              </label>
+              <textarea
+                id="cultural-context-input"
+                placeholder="Share as much or as little as you'd like"
+                value={preferences.culturalContext || ''}
+                onChange={(e) => setPreferences({ ...preferences, culturalContext: e.target.value })}
+                rows={3}
+                maxLength={500}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '16px',
+                  border: `1px solid var(--umeed-orange-100)`,
+                  backgroundColor: 'white',
+                  color: 'var(--umeed-ink-900)',
+                  fontSize: '16px',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  outline: 'none',
+                  transition: 'all 300ms',
+                  resize: 'vertical',
+                  boxSizing: 'border-box',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--umeed-orange-100)';
+                }}
+              />
             </div>
 
             <button
