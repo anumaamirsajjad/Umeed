@@ -3,8 +3,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { UserRow } from '../db/schema.js';
 import { loadTable, saveTable } from '../db/jsonStore.js';
+import env from '../config/env.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production';
+const JWT_SECRET = env.JWT_SECRET;
 const TOKEN_EXPIRY = '7d';
 
 export interface AuthPayload {
