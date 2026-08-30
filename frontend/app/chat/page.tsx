@@ -199,6 +199,10 @@ export default function ChatPage() {
   const greeting = `Hey ${preferences?.name?.trim() || 'there'}, good to see you.`;
   const moodLabel = loggedMood ? MOOD_LABELS[loggedMood - 1] : 'Not set';
   const moodScores = [1, 2, 3, 4, 5];
+  // Widen the reading column when a drawer isn't eating into the available
+  // space, so closing one visibly grows the chat instead of leaving the
+  // freed width empty around a column that never changes size.
+  const threadMaxWidth = sidebarOpen || rightPanelOpen ? 'max-w-[640px]' : 'max-w-4xl';
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark flex flex-col">
@@ -321,7 +325,7 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto mb-5 flex flex-col gap-4 w-full max-w-[640px] mx-auto">
+          <div className={`flex-1 overflow-y-auto mb-5 flex flex-col gap-4 w-full mx-auto transition-[max-width] duration-standard ease-umeed ${threadMaxWidth}`}>
             {/* Greeting */}
             <div className="flex justify-start gap-3">
               <Avatar size="sm" />
@@ -372,7 +376,7 @@ export default function ChatPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSendMessage} className="flex gap-3 w-full max-w-[640px] mx-auto">
+          <form onSubmit={handleSendMessage} className={`flex gap-3 w-full mx-auto transition-[max-width] duration-standard ease-umeed ${threadMaxWidth}`}>
             <input
               id="chat-input"
               type="text"
