@@ -101,7 +101,7 @@ export default function DashboardPage() {
         {/* One clear primary action */}
         <Link
           href={ROUTES.chat}
-          className="animate-fade-up group flex items-center justify-center gap-2 rounded-2xl bg-primary-600 hover:bg-primary-700 text-white text-center font-semibold text-lg py-5 transition-colors duration-micro ease-umeed"
+          className="animate-fade-up group flex items-center justify-center gap-2 rounded-2xl bg-primary-700 hover:bg-primary-800 text-white text-center font-semibold text-lg py-5 transition-colors duration-micro ease-umeed"
           style={{ animationDelay: '70ms' }}
         >
           Continue the conversation
@@ -215,7 +215,7 @@ export default function DashboardPage() {
               </p>
               <Link
                 href={ROUTES.safetyPlanBuilder}
-                className="inline-flex rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-semibold text-sm px-4 py-2 transition-colors duration-micro ease-umeed"
+                className="inline-flex rounded-lg bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm px-4 py-2 transition-colors duration-micro ease-umeed"
               >
                 Start your safety plan
               </Link>

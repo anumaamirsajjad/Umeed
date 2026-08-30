@@ -224,13 +224,13 @@ export default function ChatPage() {
         <div
           className={
             sidebarOpen
-              ? 'fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 lg:w-64 lg:overflow-hidden translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40 lg:rounded-card lg:border lg:m-6 lg:mr-0 p-4 flex flex-col gap-1 overflow-y-auto'
-              : 'fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 lg:w-0 lg:overflow-hidden -translate-x-full lg:translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40 lg:border-0 lg:m-0 lg:p-0 p-4 flex flex-col gap-1 overflow-y-auto'
+              ? 'fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 lg:w-64 translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40 lg:rounded-card lg:border lg:m-6 lg:mr-0 p-4 flex flex-col gap-1 overflow-y-auto'
+              : 'fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 lg:w-0 lg:overflow-hidden invisible -translate-x-full lg:translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40 lg:border-0 lg:m-0 lg:p-0 p-4 flex flex-col gap-1 overflow-y-auto'
           }
         >
           <button
             onClick={handleNewChat}
-            className="mb-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-semibold text-sm px-3 py-2.5 transition-colors duration-micro ease-umeed"
+            className="mb-2 rounded-lg bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm px-3 py-2.5 transition-colors duration-micro ease-umeed"
           >
             + New chat
           </button>
@@ -332,7 +332,7 @@ export default function ChatPage() {
                 <div
                   className={`px-4 py-3 text-base leading-relaxed max-w-[500px] ${
                     msg.role === 'user'
-                      ? 'bg-primary-600 text-white rounded-2xl rounded-tr-sm'
+                      ? 'bg-primary-700 text-white rounded-2xl rounded-tr-sm'
                       : msg.messageType === 'pattern_insight'
                         ? 'bg-primary-700 text-white rounded-2xl rounded-tl-sm'
                         : 'bg-primary-50 dark:bg-primary-900/20 text-ink-light dark:text-ink-dark rounded-2xl rounded-tl-sm'
@@ -382,7 +382,7 @@ export default function ChatPage() {
               type="submit"
               disabled={!input.trim() || loading}
               aria-label="Send message"
-              className="h-12 w-12 rounded-full bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center transition-colors duration-quick ease-umeed disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-12 w-12 rounded-full bg-primary-700 hover:bg-primary-800 text-white flex items-center justify-center transition-colors duration-quick ease-umeed disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Icon name="arrowRight" className="icon-inline" />
             </button>
@@ -393,8 +393,8 @@ export default function ChatPage() {
         <div
           className={
             rightPanelOpen
-              ? 'fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] lg:w-[300px] lg:overflow-hidden translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40 lg:rounded-card lg:border lg:m-6 lg:ml-0 p-6 flex flex-col gap-6 overflow-y-auto'
-              : 'fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] lg:w-0 lg:overflow-hidden translate-x-full lg:translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40 lg:border-0 lg:m-0 lg:p-0 p-6 flex flex-col gap-6 overflow-y-auto'
+              ? 'fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] lg:w-[300px] translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40 lg:rounded-card lg:border lg:m-6 lg:ml-0 p-6 flex flex-col gap-6 overflow-y-auto'
+              : 'fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] lg:w-0 lg:overflow-hidden invisible translate-x-full lg:translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40 lg:border-0 lg:m-0 lg:p-0 p-6 flex flex-col gap-6 overflow-y-auto'
           }
         >
           <div>

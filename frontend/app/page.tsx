@@ -54,7 +54,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href={ROUTES.signup}
-              className="rounded-lg px-4 py-2 text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white transition-colors duration-micro ease-umeed"
+              className="rounded-lg px-4 py-2 text-sm font-semibold bg-primary-700 hover:bg-primary-800 text-white transition-colors duration-micro ease-umeed"
             >
               Sign up
             </Link>
@@ -86,7 +86,7 @@ export default function LandingPage() {
             <div className="animate-fade-up" style={{ animationDelay: '160ms' }}>
               <Link
                 href={ROUTES.signup}
-                className="inline-flex items-center gap-2 justify-center rounded-pill bg-primary-600 hover:bg-primary-700 text-white font-semibold text-lg px-8 py-3.5 transition-colors duration-micro ease-umeed"
+                className="inline-flex items-center gap-2 justify-center rounded-pill bg-primary-700 hover:bg-primary-800 text-white font-semibold text-lg px-8 py-3.5 transition-colors duration-micro ease-umeed"
               >
                 Get started
                 <Icon name="arrowRight" className="icon-inline" />

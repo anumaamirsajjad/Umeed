@@ -5,6 +5,7 @@ import { getResources, searchResources } from '@/lib/api';
 import { ACTIVE_CITY_FILTERS, ACTIVE_REGION } from '@/lib/cities';
 import { Chip } from '@/components/ui/Chip';
 import { Icon } from '@/components/ui/Icon';
+import { MoonToggle } from '@/components/common/MoonToggle';
 import type { CrisisResource } from '@/lib/types';
 
 const TYPE_LABELS: Record<CrisisResource['type'], string> = {
@@ -123,7 +124,10 @@ export default function ResourcesPage() {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark pb-16">
-      <div className="jali-bg px-6 md:px-10 pt-10 pb-6 border-b border-primary-100 dark:border-primary-900/40">
+      <div className="relative jali-bg px-6 md:px-10 pt-10 pb-6 border-b border-primary-100 dark:border-primary-900/40">
+        <div className="absolute top-4 right-4">
+          <MoonToggle size="sm" />
+        </div>
         <h1 className="font-display text-4xl font-bold text-ink-light dark:text-ink-dark mb-2">Support Resources</h1>
         <p className="text-base text-ink-muted">Crisis lines, counselors, and support groups in your region.</p>
       </div>

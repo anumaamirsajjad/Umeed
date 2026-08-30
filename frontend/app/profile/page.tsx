@@ -139,7 +139,7 @@ export default function ProfilePage() {
         <h1 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark">Profile Settings</h1>
         <Link
           href={ROUTES.chat}
-          className="rounded-pill bg-primary-600 hover:bg-primary-700 text-white font-semibold text-sm px-5 py-2.5 transition-colors duration-micro ease-umeed"
+          className="rounded-pill bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm px-5 py-2.5 transition-colors duration-micro ease-umeed"
         >
           Back to chat
         </Link>
