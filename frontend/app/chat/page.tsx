@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { sendMessage, listConversations, getConversation, renameConversation, deleteConversation, getPreferences, getMoodCheckinStatus, submitMoodCheckin } from '@/lib/api';
@@ -34,10 +34,20 @@ export default function ChatPage() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  // Default closed — correct for mobile's initial (SSR) render. Desktop's
+  // "open by default" look is restored post-mount below, since a single
+  // boolean can't express two different first-paint defaults per breakpoint.
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+
+  useLayoutEffect(() => {
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      setSidebarOpen(true);
+      setRightPanelOpen(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
@@ -212,12 +222,11 @@ export default function ChatPage() {
 
         {/* Conversation list: overlay drawer below lg, collapsible column at lg+ */}
         <div
-          className={`fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 lg:overflow-hidden
-            transition-transform lg:transition-[width] duration-quick ease-umeed
-            ${sidebarOpen ? 'translate-x-0 lg:w-64' : '-translate-x-full lg:translate-x-0 lg:w-0'}
-            bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40
-            lg:rounded-card lg:border lg:m-6 lg:mr-0
-            p-4 flex flex-col gap-1 overflow-y-auto`}
+          className={
+            sidebarOpen
+              ? 'fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 lg:w-64 lg:overflow-hidden translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40 lg:rounded-card lg:border lg:m-6 lg:mr-0 p-4 flex flex-col gap-1 overflow-y-auto'
+              : 'fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 lg:w-0 lg:overflow-hidden -translate-x-full lg:translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40 lg:border-0 lg:m-0 lg:p-0 p-4 flex flex-col gap-1 overflow-y-auto'
+          }
         >
           <button
             onClick={handleNewChat}
@@ -382,12 +391,11 @@ export default function ChatPage() {
 
         {/* Right: mood/support panel — same drawer mechanism, mirrored to the right edge */}
         <div
-          className={`fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] lg:overflow-hidden
-            transition-transform lg:transition-[width] duration-quick ease-umeed
-            ${rightPanelOpen ? 'translate-x-0 lg:w-[300px]' : 'translate-x-full lg:translate-x-0 lg:w-0'}
-            bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40
-            lg:rounded-card lg:border lg:m-6 lg:ml-0
-            p-6 flex flex-col gap-6 overflow-y-auto`}
+          className={
+            rightPanelOpen
+              ? 'fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] lg:w-[300px] lg:overflow-hidden translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40 lg:rounded-card lg:border lg:m-6 lg:ml-0 p-6 flex flex-col gap-6 overflow-y-auto'
+              : 'fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] lg:w-0 lg:overflow-hidden translate-x-full lg:translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40 lg:border-0 lg:m-0 lg:p-0 p-6 flex flex-col gap-6 overflow-y-auto'
+          }
         >
           <div>
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-wide mb-3">How you&apos;re feeling</h3>
