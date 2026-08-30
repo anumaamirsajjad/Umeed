@@ -220,12 +220,16 @@ export default function ChatPage() {
           />
         )}
 
-        {/* Conversation list: overlay drawer below lg, collapsible column at lg+ */}
+        {/* Conversation list: overlay drawer below lg, collapsible column at lg+.
+            Desktop open/closed is a plain lg:flex/lg:hidden swap rather than a
+            width/padding/border/margin juggling act — display:none guarantees
+            zero footprint with no residual-width ambiguity, at the cost of the
+            collapse no longer animating at desktop (mobile's slide-in still does). */}
         <div
           className={
             sidebarOpen
-              ? 'fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 lg:w-64 translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40 lg:rounded-card lg:border lg:m-6 lg:mr-0 p-4 flex flex-col gap-1 overflow-y-auto'
-              : 'fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 lg:w-0 lg:overflow-hidden invisible -translate-x-full lg:translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40 lg:border-0 lg:m-0 lg:p-0 p-4 flex flex-col gap-1 overflow-y-auto'
+              ? 'fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 translate-x-0 transition-transform duration-quick ease-umeed bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40 lg:rounded-card lg:border lg:m-6 lg:mr-0 p-4 flex flex-col gap-1 overflow-y-auto'
+              : 'invisible fixed lg:hidden inset-y-0 left-0 z-40 w-64 -translate-x-full transition-transform duration-quick ease-umeed bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40 p-4 flex flex-col gap-1 overflow-y-auto'
           }
         >
           <button
@@ -321,7 +325,7 @@ export default function ChatPage() {
             {/* Greeting */}
             <div className="flex justify-start gap-3">
               <Avatar size="sm" />
-              <div className="bg-primary-50 dark:bg-primary-900/20 px-4 py-3 rounded-2xl rounded-tl-sm text-ink-light dark:text-ink-dark text-base leading-relaxed max-w-[500px]">
+              <div className="bg-surface dark:bg-surface-darker shadow-sm border border-primary-100 dark:border-primary-900/40 px-4 py-3 rounded-2xl rounded-tl-sm text-ink-light dark:text-ink-dark text-base leading-relaxed max-w-[500px]">
                 {greeting}
               </div>
             </div>
@@ -335,7 +339,7 @@ export default function ChatPage() {
                       ? 'bg-primary-700 text-white rounded-2xl rounded-tr-sm'
                       : msg.messageType === 'pattern_insight'
                         ? 'bg-primary-700 text-white rounded-2xl rounded-tl-sm'
-                        : 'bg-primary-50 dark:bg-primary-900/20 text-ink-light dark:text-ink-dark rounded-2xl rounded-tl-sm'
+                        : 'bg-surface dark:bg-surface-darker shadow-sm border border-primary-100 dark:border-primary-900/40 text-ink-light dark:text-ink-dark rounded-2xl rounded-tl-sm'
                   }`}
                 >
                   {msg.messageType === 'pattern_insight' && (
@@ -393,8 +397,8 @@ export default function ChatPage() {
         <div
           className={
             rightPanelOpen
-              ? 'fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] lg:w-[300px] translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40 lg:rounded-card lg:border lg:m-6 lg:ml-0 p-6 flex flex-col gap-6 overflow-y-auto'
-              : 'fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] lg:w-0 lg:overflow-hidden invisible translate-x-full lg:translate-x-0 transition-transform lg:transition-[width] duration-quick ease-umeed bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40 lg:border-0 lg:m-0 lg:p-0 p-6 flex flex-col gap-6 overflow-y-auto'
+              ? 'fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] translate-x-0 transition-transform duration-quick ease-umeed bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40 lg:rounded-card lg:border lg:m-6 lg:ml-0 p-6 flex flex-col gap-6 overflow-y-auto'
+              : 'invisible fixed lg:hidden inset-y-0 right-0 z-40 w-[300px] translate-x-full transition-transform duration-quick ease-umeed bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40 p-6 flex flex-col gap-6 overflow-y-auto'
           }
         >
           <div>

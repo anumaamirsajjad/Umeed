@@ -83,10 +83,7 @@ export default function SafetyPlanViewPage() {
     <div className="min-h-screen flex flex-col bg-surface-light dark:bg-surface-dark">
       <div className="flex-1 px-6 pt-16">
         <div className="max-w-2xl mx-auto space-y-6">
-          <Card
-            padding="lg"
-            className="rounded-card space-y-8 bg-gradient-to-br from-primary-50 to-surface dark:from-surface-darker dark:to-surface-dark"
-          >
+          <Card padding="lg" className="space-y-8">
             {loading ? (
               <ViewSkeleton />
             ) : !plan ? (

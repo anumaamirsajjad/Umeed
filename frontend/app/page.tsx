@@ -116,12 +116,12 @@ export default function LandingPage() {
                 >
                   <Icon name={f.icon} className="icon-inline" />
                 </div>
-                <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark flex items-baseline gap-2">
-                  {f.title}
-                  <span className="font-nastaliq text-sm text-primary-600 dark:text-primary-300" lang="ur" dir="rtl">
+                <div className="space-y-0.5">
+                  <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark">{f.title}</h2>
+                  <p className="font-nastaliq text-sm text-primary-600 dark:text-primary-300" lang="ur" dir="rtl">
                     {f.urdu}
-                  </span>
-                </h2>
+                  </p>
+                </div>
                 <p className="text-sm text-ink-muted">{f.body}</p>
               </Card>
             ))}

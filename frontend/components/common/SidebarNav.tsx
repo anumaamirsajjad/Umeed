@@ -48,6 +48,7 @@ export function SidebarNav() {
             <Link
               key={item.href}
               href={item.href}
+              title={`${item.label} · ${item.urdu}`}
               className={`flex flex-col items-center gap-1.5 no-underline transition-colors duration-micro ease-umeed ${
                 isActive
                   ? 'text-primary-700 dark:text-primary-300'
@@ -55,14 +56,13 @@ export function SidebarNav() {
               }`}
             >
               <span
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-micro ease-umeed ${
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-micro ease-umeed ${
                   isActive ? 'bg-primary-100 dark:bg-primary-900/40' : ''
                 }`}
               >
-                <Icon name={item.icon} className="h-[18px] w-[18px]" />
+                <Icon name={item.icon} className="h-5 w-5" />
               </span>
-              <span className="text-[7px] font-nastaliq font-bold leading-none">{item.urdu}</span>
-              <span className="text-[9px] font-semibold tracking-wide uppercase leading-none">{item.label}</span>
+              <span className="text-[10px] font-semibold tracking-wide uppercase leading-none">{item.label}</span>
             </Link>
           );
         })}
