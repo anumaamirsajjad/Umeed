@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getPreferences, updatePreferences, resetPassword } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useRequireAuth';
+import { useAuth } from '@/lib/authContext';
 import type { UserPreferences } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Input';
 import { Chip } from '@/components/ui/Chip';
 import { Icon } from '@/components/ui/Icon';
+import { MoonToggle } from '@/components/common/MoonToggle';
 import {
   SUPPORT_STYLE_OPTIONS,
   TOPICS_OF_CONCERN,
@@ -21,11 +23,14 @@ type Tab = 'preferences' | 'password';
 
 export default function ProfilePage() {
   const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  const { logout } = useAuth();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>('preferences');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
+  const [dirty, setDirty] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -49,6 +54,33 @@ export default function ProfilePage() {
     loadPreferences();
   }, [authLoading, isAuthenticated]);
 
+  // Edited preferences used to vanish silently on tab switch or navigation.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
+
+  // Single funnel for preference edits so `dirty` can't drift out of sync.
+  const editPreferences = (patch: Partial<UserPreferences>) => {
+    setPreferences((prev) => (prev ? { ...prev, ...patch } : prev));
+    setDirty(true);
+  };
+
+  const handleLogout = () => {
+    if (dirty && !window.confirm('You have unsaved changes. Sign out anyway?')) return;
+    logout();
+    router.replace(ROUTES.login);
+  };
+
+  const handleTabChange = (next: Tab) => {
+    if (dirty && next !== tab && !window.confirm('You have unsaved changes. Leave this tab anyway?')) return;
+    setError('');
+    setSuccessMessage('');
+    setTab(next);
+  };
+
   const handleSavePreferences = async () => {
     if (!preferences) return;
 
@@ -58,7 +90,8 @@ export default function ProfilePage() {
 
     try {
       await updatePreferences(preferences);
-      setSuccessMessage('Preferences updated successfully');
+      setSuccessMessage('Preferences saved');
+      setDirty(false);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update preferences');
@@ -104,54 +137,67 @@ export default function ProfilePage() {
   const handleTopicToggle = (topic: string) => {
     if (!preferences) return;
     const current = preferences.topicsOfConcern || [];
-    const updated = current.includes(topic) ? current.filter((t) => t !== topic) : [...current, topic];
-    setPreferences({ ...preferences, topicsOfConcern: updated });
+    editPreferences({
+      topicsOfConcern: current.includes(topic) ? current.filter((t) => t !== topic) : [...current, topic],
+    });
   };
 
   const handleAvoidTopicToggle = (topic: string) => {
     if (!preferences) return;
     const current = preferences.topicsToAvoid || [];
-    const updated = current.includes(topic) ? current.filter((t) => t !== topic) : [...current, topic];
-    setPreferences({ ...preferences, topicsToAvoid: updated });
+    editPreferences({
+      topicsToAvoid: current.includes(topic) ? current.filter((t) => t !== topic) : [...current, topic],
+    });
   };
 
   const handleSupportStyleChange = (style: string) => {
-    if (!preferences) return;
-    setPreferences({ ...preferences, preferredSupportStyle: style as any });
+    editPreferences({ preferredSupportStyle: style as UserPreferences['preferredSupportStyle'] });
   };
 
   const handleLanguageChange = (code: string) => {
-    if (!preferences) return;
-    setPreferences({ ...preferences, languages: [code] });
+    editPreferences({ languages: [code] });
   };
 
   if (loading && !preferences) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-light dark:bg-surface-dark">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-surface-light dark:bg-surface-dark">
         <p className="text-lg text-ink-muted">Loading profile...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface-light dark:bg-surface-dark">
-      <div className="bg-surface/80 dark:bg-surface-darker/80 backdrop-blur px-6 py-5 border-b border-primary-100 dark:border-primary-900/40 flex justify-between items-center sticky top-0 z-10">
-        <h1 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark">Profile Settings</h1>
-        <Link
-          href={ROUTES.chat}
-          className="rounded-pill bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm px-5 py-2.5 transition-colors duration-micro ease-umeed"
-        >
-          Back to chat
-        </Link>
+    <div className="min-h-[100dvh] bg-surface-light dark:bg-surface-dark">
+      {/* md:top offset clears the floating desktop nav pill; on mobile the nav
+          is a bottom bar so top-0 is correct there. */}
+      <div className="bg-surface/80 dark:bg-surface-darker/80 backdrop-blur px-6 py-5 border-b border-primary-100 dark:border-primary-900/40 flex justify-between items-center gap-4 sticky top-0 md:top-[var(--nav-h)] z-10">
+        <h1 className="font-display text-section font-bold text-ink-light dark:text-ink-dark">Profile Settings</h1>
+        <div className="flex items-center gap-2">
+          <MoonToggle size="sm" />
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex items-center gap-1.5 rounded-pill min-h-11 px-4 text-sm font-semibold text-ink-muted hover:text-crisis-700 dark:hover:text-crisis-300 transition-colors duration-micro ease-umeed"
+          >
+            <Icon name="logout" className="h-[18px] w-[18px]" />
+            Sign out
+          </button>
+        </div>
       </div>
 
       <div className="max-w-xl mx-auto px-5 py-10">
-        <div className="flex gap-6 mb-8 border-b border-primary-100 dark:border-primary-900/40">
+        <div role="tablist" aria-label="Profile sections" className="flex gap-6 mb-8 border-b border-primary-100 dark:border-primary-900/40">
           {(['preferences', 'password'] as Tab[]).map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t)}
-              className={`px-1 pb-3 font-semibold text-sm capitalize transition-colors duration-quick ease-umeed border-b-2 -mb-px ${
+              type="button"
+              role="tab"
+              id={`tab-${t}`}
+              aria-selected={tab === t}
+              aria-controls={`panel-${t}`}
+              tabIndex={tab === t ? 0 : -1}
+              onClick={() => handleTabChange(t)}
+              className={`px-1 pb-3 min-h-11 font-semibold text-sm capitalize transition-colors duration-quick ease-umeed border-b-2 -mb-px ${
                 tab === t
                   ? 'border-primary-600 text-primary-700 dark:text-primary-300'
                   : 'border-transparent text-ink-muted hover:text-ink-light dark:hover:text-ink-dark'
@@ -163,37 +209,46 @@ export default function ProfilePage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 rounded-lg px-4 py-3 mb-5 text-sm">
+          <div
+            role="alert"
+            className="bg-crisis-50 dark:bg-crisis-900/30 text-crisis-700 dark:text-crisis-300 rounded-lg px-4 py-3 mb-5 text-sm"
+          >
             {error}
           </div>
         )}
 
         {successMessage && (
-          <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 text-primary-800 dark:text-primary-200 rounded-lg px-4 py-3 mb-5 text-sm flex items-center gap-2">
+          <div
+            role="status"
+            className="bg-primary-50 dark:bg-primary-900/20 text-primary-800 dark:text-primary-200 rounded-lg px-4 py-3 mb-5 text-sm flex items-center gap-2"
+          >
             <Icon name="sparkle" className="icon-inline" />
             {successMessage}
           </div>
         )}
 
         {tab === 'preferences' && preferences && (
-          <div className="space-y-8">
+          <div role="tabpanel" id="panel-preferences" aria-labelledby="tab-preferences" className="space-y-8">
             <Input
               label="Your name"
               value={preferences.name || ''}
-              onChange={(e) => setPreferences({ ...preferences, name: e.target.value })}
+              onChange={(e) => editPreferences({ name: e.target.value })}
               maxLength={50}
             />
 
             <div>
-              <label className="block text-sm font-semibold text-ink-light dark:text-ink-dark mb-3">
+              <span className="block text-sm font-semibold text-ink-light dark:text-ink-dark mb-3" id="support-style-label">
                 How do you prefer support?
-              </label>
-              <div className="flex flex-col gap-3">
+              </span>
+              <div className="flex flex-col gap-3" role="radiogroup" aria-labelledby="support-style-label">
                 {SUPPORT_STYLE_OPTIONS.map((option) => {
                   const checked = preferences.preferredSupportStyle === option.value;
                   return (
                     <button
                       key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={checked}
                       onClick={() => handleSupportStyleChange(option.value)}
                       className={`text-left rounded-2xl p-4 transition-colors duration-quick ease-umeed ${
                         checked
@@ -250,7 +305,7 @@ export default function ProfilePage() {
                 id="cultural-context-input"
                 placeholder="Share as much or as little as you'd like"
                 value={preferences.culturalContext || ''}
-                onChange={(e) => setPreferences({ ...preferences, culturalContext: e.target.value })}
+                onChange={(e) => editPreferences({ culturalContext: e.target.value })}
                 rows={3}
                 maxLength={500}
                 className="w-full rounded-2xl border border-primary-200 dark:border-primary-900/50 bg-surface dark:bg-surface-dark px-4 py-3 text-base text-ink-light dark:text-ink-dark outline-none transition-colors duration-quick ease-umeed focus:border-primary-500 resize-vertical"
@@ -276,7 +331,7 @@ export default function ProfilePage() {
         )}
 
         {tab === 'password' && (
-          <div className="space-y-5">
+          <div role="tabpanel" id="panel-password" aria-labelledby="tab-password" className="space-y-5">
             <Input
               label="Current password"
               type="password"

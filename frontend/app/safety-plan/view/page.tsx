@@ -50,18 +50,24 @@ function ViewSkeleton() {
 export default function SafetyPlanViewPage() {
   const [plan, setPlan] = useState<SafetyPlan | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
   const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
     getSafetyPlan()
       .then(setPlan)
+      // A failed load is not an empty plan. Telling someone with a saved plan
+      // that they never made one is the worse of the two wrong answers.
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [authLoading, isAuthenticated]);
 
   const handleExportPDF = async () => {
     setExporting(true);
+    setExportError(false);
     try {
       const blob = await exportSafetyPlanPDF();
       const url = window.URL.createObjectURL(blob);
@@ -74,23 +80,36 @@ export default function SafetyPlanViewPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error exporting PDF:', error);
+      setExportError(true);
     } finally {
       setExporting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface-light dark:bg-surface-dark">
-      <div className="flex-1 px-6 pt-16">
+    <div className="min-h-[100dvh] flex flex-col bg-surface-light dark:bg-surface-dark">
+      <div className="flex-1 px-6 pt-10">
         <div className="max-w-2xl mx-auto space-y-6">
           <Card padding="lg" className="space-y-8">
             {loading ? (
               <ViewSkeleton />
+            ) : loadError ? (
+              <div className="text-center space-y-4 py-8" role="alert">
+                <p className="text-base text-crisis-700 dark:text-crisis-300">
+                  We couldn&apos;t load your safety plan just now.
+                </p>
+                <Button className="rounded-pill" onClick={() => window.location.reload()}>
+                  Try again
+                </Button>
+              </div>
             ) : !plan ? (
               <div className="text-center space-y-4 py-8">
-                <p className="text-base text-ink-muted">You haven't saved a safety plan yet.</p>
-                <Link href={ROUTES.safetyPlanBuilder}>
-                  <Button className="rounded-pill">Build your safety plan</Button>
+                <p className="text-base text-ink-muted">You haven&apos;t saved a safety plan yet.</p>
+                <Link
+                  href={ROUTES.safetyPlanBuilder}
+                  className="inline-flex items-center justify-center min-h-11 rounded-pill bg-primary-700 hover:bg-primary-800 text-white font-semibold px-6 transition-colors duration-micro ease-umeed"
+                >
+                  Build your safety plan
                 </Link>
               </div>
             ) : (
@@ -146,16 +165,27 @@ export default function SafetyPlanViewPage() {
                   />
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <Link href={ROUTES.safetyPlanBuilder} className="flex-1">
-                    <Button variant="ghost" className="w-full rounded-pill">
+                {/* These were <Link><Button/></Link> — a <button> inside an
+                    <a>, which is invalid and produces two tab stops. The link
+                    is now styled directly. */}
+                <div className="space-y-2 pt-2">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Link
+                      href={ROUTES.safetyPlanBuilder}
+                      className="flex-1 inline-flex items-center justify-center min-h-11 rounded-pill font-semibold text-primary-800 dark:text-primary-100 hover:bg-primary-100 dark:hover:bg-white/5 transition-colors duration-micro ease-umeed"
+                    >
                       Edit plan
+                    </Link>
+                    <Button className="flex-1 rounded-pill gap-1.5" loading={exporting} onClick={handleExportPDF}>
+                      <Icon name="download" className="icon-inline" />
+                      Export as PDF
                     </Button>
-                  </Link>
-                  <Button className="flex-1 rounded-pill gap-1.5" loading={exporting} onClick={handleExportPDF}>
-                    <Icon name="download" className="icon-inline" />
-                    Export as PDF
-                  </Button>
+                  </div>
+                  {exportError && (
+                    <p className="text-sm text-crisis-700 dark:text-crisis-300 text-center" role="alert">
+                      That export didn&apos;t go through. Try again in a moment.
+                    </p>
+                  )}
                 </div>
               </>
             )}

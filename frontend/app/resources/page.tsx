@@ -25,7 +25,7 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 
 function ResourceCard({ resource }: { resource: CrisisResource }) {
   return (
-    <div className="rounded-2xl bg-surface dark:bg-surface-darker border-l-4 border-primary-500 shadow-sm p-5 transition-all duration-quick ease-umeed hover:shadow-md hover:-translate-y-0.5">
+    <div className="rounded-2xl bg-surface dark:bg-surface-darker border border-primary-100 dark:border-primary-900/40 shadow-sm p-5 transition-all duration-quick ease-umeed hover:shadow-md hover:-translate-y-0.5">
       <div className="flex justify-between items-start gap-3 mb-2">
         <h3 className="text-lg font-bold text-ink-light dark:text-ink-dark">{resource.name}</h3>
         <span className="bg-accent-700 text-white px-3 py-1 rounded-pill text-xs font-bold whitespace-nowrap">
@@ -122,7 +122,7 @@ export default function ResourcesPage() {
   const isSearching = search.trim().length >= 2;
 
   return (
-    <div className="min-h-screen bg-surface-light dark:bg-surface-dark pb-16">
+    <div className="min-h-[100dvh] bg-surface-light dark:bg-surface-dark pb-16">
       <div className="relative jali-bg px-6 md:px-10 pt-10 pb-6 border-b border-primary-100 dark:border-primary-900/40">
         <h1 className="font-display text-hero font-bold text-ink-light dark:text-ink-dark mb-2">Support Resources</h1>
         <p className="text-base text-ink-muted">Crisis lines, counselors, and support groups in your region.</p>
@@ -145,20 +145,39 @@ export default function ResourcesPage() {
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto px-6 md:px-10 pb-6" role="group" aria-label="Filter by city">
-        <Chip selected={selectedCity === null} disabled={isSearching} onClick={() => setSelectedCity(null)}>
-          All
-        </Chip>
-        {ACTIVE_CITY_FILTERS.map((city) => (
-          <Chip
-            key={city.code}
-            selected={selectedCity === city.code}
-            disabled={isSearching}
-            onClick={() => setSelectedCity(city.code)}
+      <div className="px-6 md:px-10 pb-6">
+        {/* The right-edge fade is the only cue that more cities exist beyond
+            the viewport; without it the list looked complete at six. */}
+        <div className="relative">
+          <div
+            className="flex gap-2 overflow-x-auto pb-1 pr-6 [scrollbar-width:thin]"
+            role="group"
+            aria-label="Filter by city"
           >
-            {city.label}
-          </Chip>
-        ))}
+            <Chip selected={selectedCity === null} disabled={isSearching} onClick={() => setSelectedCity(null)}>
+              All
+            </Chip>
+            {ACTIVE_CITY_FILTERS.map((city) => (
+              <Chip
+                key={city.code}
+                selected={selectedCity === city.code}
+                disabled={isSearching}
+                onClick={() => setSelectedCity(city.code)}
+              >
+                {city.label}
+              </Chip>
+            ))}
+          </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-surface-light dark:from-surface-dark to-transparent"
+          />
+        </div>
+        {isSearching && (
+          <p className="mt-2 text-xs text-ink-muted" role="status">
+            City filters are paused while you search. Clear the search box to use them.
+          </p>
+        )}
       </div>
 
       <div className="max-w-3xl mx-auto px-6 md:px-10">

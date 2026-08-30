@@ -27,7 +27,7 @@ const FEATURES: { icon: IconName; title: string; urdu: string; body: string }[] 
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-surface-light dark:bg-surface-dark">
+    <div className="min-h-[100dvh] flex flex-col bg-surface-light dark:bg-surface-dark">
       {/* Persistent crisis banner — independent of the auth wall, reachable in under 3 seconds */}
       <div className="sticky top-0 z-50 bg-primary-800 text-white">
         <div className="max-w-5xl mx-auto px-4 py-2 flex items-center justify-between gap-3 text-sm">

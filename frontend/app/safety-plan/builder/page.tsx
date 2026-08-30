@@ -86,6 +86,9 @@ export default function SafetyPlanBuilder() {
   const [saving, setSaving] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  // Errors and "nothing to suggest yet" notes shared one style, so a failed
+  // save looked exactly like a helpful tip.
+  const [statusIsError, setStatusIsError] = useState(false);
 
   const step = STEPS[stepIndex];
   const isLastStep = stepIndex === STEPS.length - 1;
@@ -96,6 +99,12 @@ export default function SafetyPlanBuilder() {
     getSafetyPlan()
       .then((existing) => {
         if (existing) setPlan({ ...EMPTY_PLAN, ...existing });
+      })
+      .catch(() => {
+        // Starting from a blank plan would silently overwrite a saved one on
+        // the first "Next", so say what happened instead.
+        setStatusMessage("We couldn't load your saved plan. Reload before editing so nothing gets overwritten.");
+        setStatusIsError(true);
       })
       .finally(() => setLoading(false));
   }, [authLoading, isAuthenticated]);
@@ -116,15 +125,21 @@ export default function SafetyPlanBuilder() {
       } catch (error) {
         console.error('Error saving safety plan:', error);
         setStatusMessage('Something went wrong saving your plan. Please try again.');
+        setStatusIsError(true);
         return null;
       }
     },
     []
   );
 
+  // Stay on the current step when the save fails. Advancing regardless meant a
+  // network blip discarded whatever the user had just written, with only a
+  // status line they had already scrolled past.
   const goToStep = async (index: number) => {
     setStatusMessage(null);
-    await persist(plan);
+    setStatusIsError(false);
+    const saved = await persist(plan);
+    if (!saved) return;
     setStepIndex(index);
   };
 
@@ -141,6 +156,7 @@ export default function SafetyPlanBuilder() {
   const handleFinish = async () => {
     setSaving(true);
     setStatusMessage(null);
+    setStatusIsError(false);
     const saved = await persist(plan);
     setSaving(false);
     if (saved) router.push(ROUTES.safetyPlanView);
@@ -149,6 +165,7 @@ export default function SafetyPlanBuilder() {
   const handleSuggest = async () => {
     setSuggesting(true);
     setStatusMessage(null);
+    setStatusIsError(false);
     try {
       const suggestions = await getSafetyPlanSuggestions();
       const dedupe = (existing: string[], incoming: string[]) => Array.from(new Set([...existing, ...incoming]));
@@ -202,6 +219,7 @@ export default function SafetyPlanBuilder() {
     } catch (error) {
       console.error('Error loading suggestions:', error);
       setStatusMessage('Could not load suggestions right now.');
+      setStatusIsError(true);
     } finally {
       setSuggesting(false);
     }
@@ -209,16 +227,16 @@ export default function SafetyPlanBuilder() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-light dark:bg-surface-dark">
-        <p className="text-ink-muted">Loading your safety plan...</p>
+      <div className="min-h-[100dvh] flex items-center justify-center bg-surface-light dark:bg-surface-dark">
+        <p className="text-ink-muted" role="status">Loading your safety plan…</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface-light dark:bg-surface-dark pt-10 pb-16 px-5">
+    <div className="min-h-[100dvh] bg-surface-light dark:bg-surface-dark pt-8 pb-16 px-5">
       <div className="max-w-3xl mx-auto mb-10">
-        <h1 className="font-display text-4xl font-bold text-ink-light dark:text-ink-dark mb-4">My Safety Plan</h1>
+        <h1 className="font-display text-heading font-bold text-ink-light dark:text-ink-dark mb-4">My Safety Plan</h1>
         <StepProgress step={stepIndex + 1} total={STEPS.length} />
       </div>
 
@@ -240,7 +258,14 @@ export default function SafetyPlanBuilder() {
         </div>
 
         {statusMessage && (
-          <div className="px-4 py-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500 text-ink-light dark:text-ink-dark text-sm mb-6">
+          <div
+            role={statusIsError ? 'alert' : 'status'}
+            className={`px-4 py-3 rounded-lg text-sm mb-6 ${
+              statusIsError
+                ? 'bg-crisis-50 dark:bg-crisis-900/30 text-crisis-700 dark:text-crisis-300'
+                : 'bg-primary-50 dark:bg-primary-900/20 text-ink-light dark:text-ink-dark'
+            }`}
+          >
             {statusMessage}
           </div>
         )}
@@ -252,7 +277,7 @@ export default function SafetyPlanBuilder() {
             onChange={(e) => setPlan((prev) => ({ ...prev, [step.field as keyof SafetyPlan]: linesToArray(e.target.value) }))}
             placeholder={step.placeholder}
             rows={10}
-            className="w-full p-4 rounded-lg border-2 border-dashed border-primary-300 dark:border-primary-800 bg-surface-light dark:bg-surface-dark text-ink-light dark:text-ink-dark text-base leading-relaxed outline-none transition-colors duration-quick ease-umeed focus:border-primary-600 resize-vertical"
+            className="w-full p-4 rounded-2xl border border-primary-200 dark:border-primary-900/50 bg-surface-light dark:bg-surface-dark text-ink-light dark:text-ink-dark text-base leading-relaxed outline-none transition-colors duration-quick ease-umeed focus:border-primary-500 resize-vertical"
           />
         ) : (
           <div>
@@ -316,7 +341,8 @@ export default function SafetyPlanBuilder() {
                 onChange={(e) => setContactDraft((prev) => ({ ...prev, email: e.target.value }))}
               />
             </div>
-            <Button variant="ghost" onClick={handleAddContact}>
+            {/* Disabled rather than silently no-op'ing on an empty name. */}
+            <Button variant="ghost" disabled={!contactDraft.name.trim()} onClick={handleAddContact}>
               <Icon name="people" className="icon-inline" />
               Add contact
             </Button>

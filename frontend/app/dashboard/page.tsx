@@ -70,7 +70,7 @@ export default function DashboardPage() {
   const refreshMood = () => getMoodTrend(7).then(setMood).catch(() => setMoodError(true));
 
   return (
-    <div className="min-h-screen bg-surface-light dark:bg-surface-dark px-4 py-10">
+    <div className="min-h-[100dvh] bg-surface-light dark:bg-surface-dark px-4 py-10">
       <MoodCheckinModal
         isOpen={showMoodModal}
         onClose={() => setShowMoodModal(false)}
@@ -80,11 +80,13 @@ export default function DashboardPage() {
         }}
       />
 
-      <div className="max-w-4xl mx-auto space-y-8">
+      {/* 12-column grid at md+, asymmetric 7/5 rather than 6/6 so the primary
+          action reads as dominant without becoming a full-width slab. */}
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Header: greeting + persistent Safety Mode exit */}
-        <div className="animate-fade-up flex items-center justify-between gap-4 flex-wrap">
+        <div className="md:col-span-12 animate-fade-up grid grid-cols-[1fr_auto] items-center gap-4">
           <div>
-            <h1 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark">
+            <h1 className="font-display text-heading font-bold text-ink-light dark:text-ink-dark">
               Welcome back{name ? `, ${name}` : ''}
             </h1>
             <p className="text-sm text-ink-muted">Glad you&apos;re here.</p>
@@ -101,20 +103,58 @@ export default function DashboardPage() {
         {/* One clear primary action */}
         <Link
           href={ROUTES.chat}
-          className="animate-fade-up group flex items-center justify-center gap-2 rounded-2xl bg-primary-700 hover:bg-primary-800 text-white text-center font-semibold text-lg py-5 transition-colors duration-micro ease-umeed"
+          className="md:col-span-7 animate-fade-up group flex items-center justify-center gap-2 rounded-2xl bg-primary-700 hover:bg-primary-800 text-white text-center font-semibold text-lg min-h-[7rem] px-6 transition-colors duration-micro ease-umeed"
           style={{ animationDelay: '70ms' }}
         >
           Continue the conversation
           <Icon name="arrowRight" className="icon-inline transition-transform duration-micro ease-umeed group-hover:translate-x-1" />
         </Link>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Recent conversations */}
-          <Card
-            padding="lg"
-            className="animate-fade-up space-y-4 hover:-translate-y-0.5 hover:shadow-md transition-all duration-quick ease-umeed"
-            style={{ animationDelay: '130ms' }}
+        {/* Mood */}
+        <Card
+          padding="lg"
+          className="md:col-span-5 animate-fade-up space-y-4 hover:-translate-y-0.5 hover:shadow-md transition-all duration-quick ease-umeed"
+          style={{ animationDelay: '130ms' }}
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
+              <Icon name="heart" className="icon-inline text-accent-600 dark:text-accent-300" />
+              How you&apos;ve been feeling
+            </h2>
+            <Link href={ROUTES.mood} className="text-sm font-semibold text-primary-700 dark:text-primary-300">
+              See your week
+            </Link>
+          </div>
+          {mood === null ? (
+            moodError ? (
+              <p className="text-sm text-ink-muted">Couldn&apos;t load your mood trend.</p>
+            ) : (
+              <CardSkeleton />
+            )
+          ) : mood.data.length === 0 ? (
+            <p className="text-sm text-ink-muted">
+              No check-ins yet this week — no pressure, just here whenever you want it.
+            </p>
+          ) : (
+            <p className="text-sm text-ink-light dark:text-ink-dark">
+              7-day average: <span className="font-semibold">{mood.average}/5</span>
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowMoodModal(true)}
+            className="min-h-11 text-sm font-semibold text-accent-700 dark:text-accent-300 hover:text-accent-800 dark:hover:text-accent-200"
           >
+            + Quick check-in
+          </button>
+        </Card>
+
+        {/* Recent conversations */}
+        <Card
+          padding="lg"
+          className="md:col-span-7 animate-fade-up space-y-4 hover:-translate-y-0.5 hover:shadow-md transition-all duration-quick ease-umeed"
+          style={{ animationDelay: '190ms' }}
+        >
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
                 <Icon name="chat" className="icon-inline text-primary-600 dark:text-primary-300" />
@@ -149,52 +189,12 @@ export default function DashboardPage() {
                 ))}
               </ul>
             )}
-          </Card>
-
-          {/* Mood */}
-          <Card
-            padding="lg"
-            className="animate-fade-up space-y-4 hover:-translate-y-0.5 hover:shadow-md transition-all duration-quick ease-umeed"
-            style={{ animationDelay: '190ms' }}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
-                <Icon name="heart" className="icon-inline text-accent-600 dark:text-accent-300" />
-                How you&apos;ve been feeling
-              </h2>
-              <Link href={ROUTES.mood} className="text-sm font-semibold text-primary-700 dark:text-primary-300">
-                See your week
-              </Link>
-            </div>
-            {mood === null ? (
-              moodError ? (
-                <p className="text-sm text-ink-muted">Couldn&apos;t load your mood trend.</p>
-              ) : (
-                <CardSkeleton />
-              )
-            ) : mood.data.length === 0 ? (
-              <p className="text-sm text-ink-muted">
-                No check-ins yet this week — no pressure, just here whenever you want it.
-              </p>
-            ) : (
-              <p className="text-sm text-ink-light dark:text-ink-dark">
-                7-day average: <span className="font-semibold">{mood.average}/5</span>
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowMoodModal(true)}
-              className="text-sm font-semibold text-accent-700 dark:text-accent-300 hover:text-accent-800 dark:hover:text-accent-200"
-            >
-              + Quick check-in
-            </button>
-          </Card>
-        </div>
+        </Card>
 
         {/* Safety plan status */}
         <Card
           padding="lg"
-          className="animate-fade-up space-y-3 hover:-translate-y-0.5 hover:shadow-md transition-all duration-quick ease-umeed"
+          className="md:col-span-5 animate-fade-up space-y-3 hover:-translate-y-0.5 hover:shadow-md transition-all duration-quick ease-umeed"
           style={{ animationDelay: '250ms' }}
         >
           <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">

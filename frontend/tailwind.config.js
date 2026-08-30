@@ -42,13 +42,22 @@ module.exports = {
           light: '#3D3A33',  // warm brown-grey, never pure black
           dark: '#EDEBE7',
           muted: 'var(--umeed-ink-500)',
+          // Text that sits on a filled primary/accent surface and must stay
+          // dark regardless of which elevation token the surface uses.
+          inverse: '#1F1D1A',
         },
-        // Crisis mode ONLY — deliberately outside the calm system so it stays
-        // universally recognizable as urgent. One shade, used flat.
+        // Crisis red — deliberately outside the calm sage/clay system so it
+        // stays universally recognizable as urgent. 600/700 are Safety Mode;
+        // 50/200/300 exist so form validation can use this scale instead of
+        // raw Tailwind reds.
         crisis: {
           DEFAULT: '#C0392B',
+          50: '#FBF0EE',
+          200: '#F0CFC9',
+          300: '#E3A9A0',
           600: '#C0392B',
           700: '#A6301F',
+          900: '#4A1811',
         },
         surface: {
           DEFAULT: '#FFFDFA',   // tinted off-white, not #FFF

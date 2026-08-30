@@ -13,31 +13,37 @@ import { checkOnboardingStatus } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  // Deliberately NOT authContext's `isLoading`: that one starts true while the
+  // stored session is restored, which left this form disabled and the button
+  // reading "Logging in…" before the user had typed anything.
+  const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
 
     if (!email || !password) {
-      setError('Email and password are required');
+      setError('Enter your email and password to continue.');
       return;
     }
 
+    setSubmitting(true);
     try {
       await login(email, password);
       const status = await checkOnboardingStatus().catch(() => ({ completed: false }));
       router.push(status.completed ? ROUTES.dashboard : ROUTES.onboarding);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : 'That login didn’t work. Check your details and try again.');
+      setSubmitting(false);
     }
   }
 
   return (
-    <div className="min-h-screen jali-bg bg-surface-light dark:bg-surface-dark flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] jali-bg bg-surface-light dark:bg-surface-dark flex items-center justify-center p-4">
       <div className="w-full max-w-md relative rounded-card bg-surface dark:bg-surface-darker shadow-sm border border-primary-100 dark:border-primary-900/40 p-8 animate-fade-up">
         <div className="absolute top-4 right-4">
           <MoonToggle size="sm" />
@@ -53,7 +59,10 @@ export default function LoginPage() {
         </p>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300 px-4 py-3 rounded-lg mb-6 text-sm">
+          <div
+            role="alert"
+            className="bg-crisis-50 dark:bg-crisis-900/30 text-crisis-700 dark:text-crisis-300 px-4 py-3 rounded-lg mb-6 text-sm"
+          >
             {error}
           </div>
         )}
@@ -65,7 +74,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
-            disabled={isLoading}
+            disabled={submitting}
             autoComplete="email"
           />
           <Input
@@ -74,11 +83,11 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            disabled={isLoading}
+            disabled={submitting}
             autoComplete="current-password"
           />
-          <Button type="submit" size="lg" loading={isLoading} className="w-full rounded-pill">
-            {isLoading ? 'Logging in…' : 'Log in'}
+          <Button type="submit" size="lg" loading={submitting} className="w-full rounded-pill">
+            {submitting ? 'Logging in…' : 'Log in'}
           </Button>
         </form>
 

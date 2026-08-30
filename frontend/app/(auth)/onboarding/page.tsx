@@ -40,7 +40,7 @@ function StepShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen animate-fade-up">
+    <div className="min-h-[100dvh] animate-fade-up">
       <HeaderBand heading={heading} subtext={subtext} />
       <div className="max-w-lg mx-auto w-full px-6 pt-8 pb-16">{children}</div>
     </div>
@@ -52,6 +52,7 @@ export default function Onboarding() {
   const { isAuthenticated, isLoading } = useRequireAuth({ requireOnboarded: false });
   const [step, setStep] = useState<Step>('redirect');
   const [loading, setLoading] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
@@ -103,6 +104,7 @@ export default function Onboarding() {
 
   const handleComplete = async () => {
     setLoading(true);
+    setSaveError('');
     try {
       await savePreferences(preferences);
       setStep('complete');
@@ -111,7 +113,8 @@ export default function Onboarding() {
       }, 2000);
     } catch (error) {
       console.error('Error saving preferences:', error);
-      alert('Error saving preferences. Please try again.');
+      // Was a native alert() — jarring in an app whose whole tone is gentle.
+      setSaveError("We couldn't save your preferences just now. Try again?");
     } finally {
       setLoading(false);
     }
@@ -120,9 +123,9 @@ export default function Onboarding() {
   const currentStep = STEP_NUMBER[step];
 
   return (
-    <div className="min-h-screen bg-surface-light dark:bg-surface-dark">
+    <div className="min-h-[100dvh] bg-surface-light dark:bg-surface-dark">
       {step === 'redirect' && (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-[100dvh] flex items-center justify-center">
           <div className="text-center">
             <h1 className="font-display text-4xl font-bold text-ink-light dark:text-ink-dark mb-3">Welcome back</h1>
             <p className="text-lg text-ink-muted">Loading your preferences...</p>
@@ -219,6 +222,9 @@ export default function Onboarding() {
               return (
                 <button
                   key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={checked}
                   onClick={() => handleSupportStyleChange(option.value)}
                   className={`text-left rounded-2xl p-4 transition-colors duration-quick ease-umeed ${
                     checked
@@ -255,25 +261,31 @@ export default function Onboarding() {
             </Select>
           </div>
 
+          {saveError && (
+            <p role="alert" className="mb-4 rounded-lg bg-crisis-50 dark:bg-crisis-900/30 px-4 py-3 text-sm text-crisis-700 dark:text-crisis-300">
+              {saveError}
+            </p>
+          )}
+
           <div className="flex gap-3">
             <Button variant="ghost" size="lg" className="flex-1 rounded-pill" onClick={() => setStep('support-style')}>
               Back
             </Button>
             <Button size="lg" className="flex-1 rounded-pill" loading={loading} onClick={handleComplete}>
-              {loading ? 'Saving...' : 'Complete'}
+              {loading ? 'Saving…' : 'Complete'}
             </Button>
           </div>
         </StepShell>
       )}
 
       {step === 'complete' && (
-        <div className="min-h-screen flex items-center justify-center px-5">
+        <div className="min-h-[100dvh] flex items-center justify-center px-5">
           <div className="text-center animate-fade-up">
             <h1 className="font-display text-4xl font-bold text-ink-light dark:text-ink-dark mb-3">All set!</h1>
             <p className="text-lg text-ink-muted mb-2 leading-relaxed">
               Your preferences have been saved. Let&apos;s get started.
             </p>
-            <p className="text-sm text-ink-muted">Redirecting to chat...</p>
+            <p className="text-sm text-ink-muted" role="status">Taking you to your dashboard…</p>
           </div>
         </div>
       )}

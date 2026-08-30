@@ -133,8 +133,11 @@ export const getSafetyPlan = async (): Promise<SafetyPlan | null> => {
     const { data } = await client.get('/safety-plan');
     return data;
   } catch (error) {
-    // 404 = no plan yet
-    return null;
+    // Only a 404 means "no plan yet". Every other failure (offline, 500) must
+    // propagate: swallowing them rendered a network error as the empty state,
+    // telling a user with a saved plan that they had never made one.
+    if (axios.isAxiosError(error) && error.response?.status === 404) return null;
+    throw error;
   }
 };
 

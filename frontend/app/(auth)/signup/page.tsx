@@ -12,41 +12,46 @@ import { MoonToggle } from '@/components/common/MoonToggle';
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup, isLoading } = useAuth();
+  const { signup } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  // See login/page.tsx: authContext's `isLoading` covers session restore, not
+  // this form's submission.
+  const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
 
     if (!email || !password || !confirmPassword) {
-      setError('All fields are required');
+      setError('Fill in every field to create your account.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Those two passwords don’t match.');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError('Use at least 6 characters for your password.');
       return;
     }
 
+    setSubmitting(true);
     try {
       await signup(email, password);
       router.push(ROUTES.onboarding);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Signup failed');
+      setError(err instanceof Error ? err.message : 'We couldn’t create that account. Try again.');
+      setSubmitting(false);
     }
   }
 
   return (
-    <div className="min-h-screen jali-bg bg-surface-light dark:bg-surface-dark flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] jali-bg bg-surface-light dark:bg-surface-dark flex items-center justify-center p-4">
       <div className="w-full max-w-md relative rounded-card bg-surface dark:bg-surface-darker shadow-sm border border-primary-100 dark:border-primary-900/40 p-8 animate-fade-up">
         <div className="absolute top-4 right-4">
           <MoonToggle size="sm" />
@@ -62,7 +67,10 @@ export default function SignupPage() {
         </p>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300 px-4 py-3 rounded-lg mb-6 text-sm">
+          <div
+            role="alert"
+            className="bg-crisis-50 dark:bg-crisis-900/30 text-crisis-700 dark:text-crisis-300 px-4 py-3 rounded-lg mb-6 text-sm"
+          >
             {error}
           </div>
         )}
@@ -74,7 +82,7 @@ export default function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
-            disabled={isLoading}
+            disabled={submitting}
             autoComplete="email"
           />
           <Input
@@ -83,7 +91,7 @@ export default function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            disabled={isLoading}
+            disabled={submitting}
             autoComplete="new-password"
           />
           <Input
@@ -92,11 +100,11 @@ export default function SignupPage() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="••••••••"
-            disabled={isLoading}
+            disabled={submitting}
             autoComplete="new-password"
           />
-          <Button type="submit" size="lg" loading={isLoading} className="w-full rounded-pill">
-            {isLoading ? 'Creating account…' : 'Create account'}
+          <Button type="submit" size="lg" loading={submitting} className="w-full rounded-pill">
+            {submitting ? 'Creating account…' : 'Create account'}
           </Button>
         </form>
 

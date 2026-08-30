@@ -2,7 +2,7 @@ interface AvatarProps {
   size?: 'sm' | 'lg';
 }
 
-// Coral-to-orange gradient "U" avatar — used in the chat header and next to
+// Sage-to-clay gradient "U" avatar — used in the chat header and next to
 // each assistant bubble.
 export function Avatar({ size = 'lg' }: AvatarProps) {
   const dims = size === 'lg' ? 'h-11 w-11 text-lg' : 'h-8 w-8 text-sm';

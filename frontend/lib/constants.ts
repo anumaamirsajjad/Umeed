@@ -92,35 +92,6 @@ export const ROUTES = {
   breathe: '/crisis/breathe',
 };
 
-// UI Constants
-export const APP_NAME = 'Cultural Context-Aware Mental Health First Aid';
-export const APP_TAGLINE = 'Your supportive companion for mental wellbeing';
-
-// Crisis escalation thresholds
-export const CRISIS_KEYWORDS = [
-  'suicide',
-  'suicidal',
-  'kill myself',
-  'end my life',
-  'no reason to live',
-  'better off dead',
-  'harm myself',
-  'self-harm',
-  'hurting myself',
-  'cut myself',
-  'overdose',
-];
-
-// Common regions for resources filtering
-export const REGIONS = [
-  { code: 'north-america', label: 'North America' },
-  { code: 'central-america', label: 'Central America' },
-  { code: 'south-america', label: 'South America' },
-  { code: 'europe', label: 'Europe' },
-  { code: 'middle-east', label: 'Middle East' },
-  { code: 'africa', label: 'Africa' },
-  { code: 'south-asia', label: 'South Asia' },
-  { code: 'southeast-asia', label: 'Southeast Asia' },
-  { code: 'east-asia', label: 'East Asia' },
-  { code: 'oceania', label: 'Oceania' },
-];
+// Deliberately NOT defined here: a client-side crisis keyword list. Crisis
+// detection is server-side only (see backend/src/services/crisisDetectionService.ts)
+// so there is exactly one source of truth. A copy in the client would drift.

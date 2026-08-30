@@ -13,8 +13,9 @@ export function Chip({ selected, className = '', children, ...props }: ChipProps
       type="button"
       aria-pressed={selected}
       className={
-        `rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-micro ease-umeed ` +
-        `disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-surface disabled:hover:border-primary-200 ` +
+        `inline-flex items-center rounded-lg border px-4 py-2 min-h-11 text-sm font-medium ` +
+        `transition-all duration-micro ease-umeed ` +
+        `disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-primary-200 ` +
         (selected
           ? 'bg-primary-700 border-primary-700 text-white hover:bg-primary-800'
           : 'bg-surface border-primary-200 text-ink-light hover:border-primary-400 hover:bg-primary-50 ' +
