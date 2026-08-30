@@ -63,6 +63,7 @@ const PATHS: Record<string, React.ReactNode> = {
   logout: <path d="M9 4H6a1 1 0 00-1 1v14a1 1 0 001 1h3M14 8l4 4-4 4M18 12H9" />,
   arrowRight: <path d="M5 12h14M13 6l6 6-6 6" />,
   x: <path d="M6 6l12 12M18 6L6 18" />,
+  menu: <path d="M4 6h16M4 12h16M4 18h16" />,
 };
 
 export type IconName = keyof typeof PATHS;

@@ -34,6 +34,8 @@ export default function ChatPage() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
 
@@ -196,9 +198,27 @@ export default function ChatPage() {
         onClose={() => setShowMoodCheckin(false)}
       />
 
-      <div className="grid grid-cols-[240px_1fr_300px] gap-6 flex-1 overflow-hidden p-6">
-        {/* Conversation list column */}
-        <div className="rounded-card bg-surface dark:bg-surface-darker border border-primary-100 dark:border-primary-900/40 shadow-sm p-4 flex flex-col gap-1 overflow-y-auto h-fit max-h-full">
+      <div className="relative flex flex-1 overflow-hidden">
+        {/* Mobile/tablet backdrop for either open drawer */}
+        {(sidebarOpen || rightPanelOpen) && (
+          <div
+            className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+            onClick={() => {
+              setSidebarOpen(false);
+              setRightPanelOpen(false);
+            }}
+          />
+        )}
+
+        {/* Conversation list: overlay drawer below lg, collapsible column at lg+ */}
+        <div
+          className={`fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 lg:overflow-hidden
+            transition-transform lg:transition-[width] duration-quick ease-umeed
+            ${sidebarOpen ? 'translate-x-0 lg:w-64' : '-translate-x-full lg:translate-x-0 lg:w-0'}
+            bg-surface dark:bg-surface-darker border-r border-primary-100 dark:border-primary-900/40
+            lg:rounded-card lg:border lg:m-6 lg:mr-0
+            p-4 flex flex-col gap-1 overflow-y-auto`}
+        >
           <button
             onClick={handleNewChat}
             className="mb-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-semibold text-sm px-3 py-2.5 transition-colors duration-micro ease-umeed"
@@ -252,20 +272,40 @@ export default function ChatPage() {
           ))}
         </div>
 
-        {/* Middle: Messages column */}
-        <div className="flex flex-col min-w-0">
+        {/* Middle: messages column, now with both drawer toggles in its header */}
+        <div className="flex-1 flex flex-col min-w-0 p-6">
           <div className="flex justify-between items-center mb-5 pb-4 border-b border-primary-100 dark:border-primary-900/40">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark m-0">Umeed</h1>
-              <p className="text-xs text-ink-muted mt-1">Your companion</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen((v) => !v)}
+                aria-label="Toggle conversations"
+                aria-pressed={sidebarOpen}
+                className="h-9 w-9 flex items-center justify-center rounded-lg text-ink-muted hover:text-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors duration-micro ease-umeed"
+              >
+                <Icon name="menu" className="icon-inline" />
+              </button>
+              <div>
+                <h1 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark m-0">Umeed</h1>
+                <p className="text-xs text-ink-muted mt-1">Your companion</p>
+              </div>
             </div>
-            <Link
-              href={ROUTES.crisis}
-              className="inline-flex items-center gap-1.5 rounded-pill bg-crisis-600 hover:bg-crisis-700 text-white text-xs font-bold px-4 py-2 transition-colors duration-micro ease-umeed whitespace-nowrap"
-            >
-              <Icon name="shield" className="h-3.5 w-3.5" />
-              Help Now
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href={ROUTES.crisis}
+                className="inline-flex items-center gap-1.5 rounded-pill bg-crisis-600 hover:bg-crisis-700 text-white text-xs font-bold px-4 py-2 transition-colors duration-micro ease-umeed whitespace-nowrap"
+              >
+                <Icon name="shield" className="h-3.5 w-3.5" />
+                Help Now
+              </Link>
+              <button
+                onClick={() => setRightPanelOpen((v) => !v)}
+                aria-label="Toggle mood and support settings"
+                aria-pressed={rightPanelOpen}
+                className="h-9 w-9 flex items-center justify-center rounded-lg text-ink-muted hover:text-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors duration-micro ease-umeed"
+              >
+                <Icon name="heart" className="icon-inline" />
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto mb-5 flex flex-col gap-4 max-w-[640px]">
@@ -340,8 +380,15 @@ export default function ChatPage() {
           </form>
         </div>
 
-        {/* Right: Sidebar */}
-        <div className="rounded-card bg-surface dark:bg-surface-darker border border-primary-100 dark:border-primary-900/40 shadow-sm p-6 flex flex-col gap-6 h-fit sticky top-6">
+        {/* Right: mood/support panel — same drawer mechanism, mirrored to the right edge */}
+        <div
+          className={`fixed lg:static inset-y-0 right-0 z-40 lg:z-auto w-[300px] lg:overflow-hidden
+            transition-transform lg:transition-[width] duration-quick ease-umeed
+            ${rightPanelOpen ? 'translate-x-0 lg:w-[300px]' : 'translate-x-full lg:translate-x-0 lg:w-0'}
+            bg-surface dark:bg-surface-darker border-l border-primary-100 dark:border-primary-900/40
+            lg:rounded-card lg:border lg:m-6 lg:ml-0
+            p-6 flex flex-col gap-6 overflow-y-auto`}
+        >
           <div>
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-wide mb-3">How you&apos;re feeling</h3>
             <div className="flex gap-1">
