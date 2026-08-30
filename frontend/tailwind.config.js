@@ -74,8 +74,12 @@ module.exports = {
         surface: {
           DEFAULT: '#FFFFFF',
           light: '#F7F4EF',
+          // Page canvas in dark mode.
           dark: '#23262B',
-          darker: '#17181C',
+          // Elevated content surface in dark mode (cards, bubbles, modals,
+          // panels) — deliberately LIGHTER than `dark`, not darker: dark-mode
+          // elevation lifts a surface off the page, it doesn't sink it below.
+          darker: '#35383D',
         },
       },
       fontFamily: {
