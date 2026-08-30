@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ROUTES } from '@/lib/constants';
 import { MoonToggle } from '@/components/common/MoonToggle';
+import { checkOnboardingStatus } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,7 +29,8 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push(ROUTES.onboarding);
+      const status = await checkOnboardingStatus().catch(() => ({ completed: false }));
+      router.push(status.completed ? ROUTES.dashboard : ROUTES.onboarding);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     }

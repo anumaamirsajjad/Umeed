@@ -60,7 +60,7 @@ export default function Onboarding() {
       try {
         const status = await checkOnboardingStatus();
         if (status.completed) {
-          router.push(ROUTES.chat);
+          router.push(ROUTES.dashboard);
         } else {
           setStep('name');
         }
@@ -107,7 +107,7 @@ export default function Onboarding() {
       await savePreferences(preferences);
       setStep('complete');
       setTimeout(() => {
-        router.push(ROUTES.chat);
+        router.push(ROUTES.dashboard);
       }, 2000);
     } catch (error) {
       console.error('Error saving preferences:', error);
