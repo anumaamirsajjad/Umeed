@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { getMoodTrend } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { MoodTrendPoint } from '@/lib/types';
-import { AppHeader } from '@/components/common/AppHeader';
 import { Card } from '@/components/ui/Card';
 
 const CHART_WIDTH = 640;
@@ -103,8 +102,7 @@ export default function MoodTrendPage() {
   }, [authLoading, isAuthenticated]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <AppHeader current="mood" />
+    <div className="min-h-[100dvh] flex flex-col">
       <div className="flex-1 p-4">
       <div className="max-w-2xl mx-auto space-y-6">
         <Card padding="lg" className="space-y-6">

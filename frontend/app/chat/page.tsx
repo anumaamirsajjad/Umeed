@@ -212,14 +212,17 @@ export default function ChatPage() {
   const threadMaxWidth = sidebarOpen || rightPanelOpen ? 'max-w-[640px]' : 'max-w-4xl';
 
   return (
-    <div className="min-h-screen bg-surface-light dark:bg-surface-dark flex flex-col">
+    // Exact height, not min-height: the composer must stay on screen, and only
+    // the thread may scroll. 100dvh tracks iOS Safari's collapsing URL bar;
+    // 100vh does not, which is what pushed the input below the fold.
+    <div className="h-[calc(100dvh-var(--nav-h)-env(safe-area-inset-bottom))] overflow-hidden bg-surface-light dark:bg-surface-dark flex flex-col">
       <MoodCheckinModal
         isOpen={showMoodCheckin}
         onSubmit={handleMoodSubmit}
         onClose={() => setShowMoodCheckin(false)}
       />
 
-      <div className="relative flex flex-1 overflow-hidden">
+      <div className="relative flex flex-1 min-h-0 overflow-hidden">
         {/* Mobile/tablet backdrop for either open drawer */}
         {(sidebarOpen || rightPanelOpen) && (
           <div
@@ -297,7 +300,9 @@ export default function ChatPage() {
         </div>
 
         {/* Middle: messages column, now with both drawer toggles in its header */}
-        <div className="flex-1 flex flex-col min-w-0 p-6">
+        {/* min-h-0 lets the thread row actually shrink; without it a flex child
+            refuses to go below its content height and shoves the composer off. */}
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 p-4 sm:p-6">
           <div className="flex justify-between items-center mb-5 pb-4 border-b border-primary-100 dark:border-primary-900/40">
             <div className="flex items-center gap-3">
               <button
