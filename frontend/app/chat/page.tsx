@@ -321,7 +321,7 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto mb-5 flex flex-col gap-4 max-w-[640px]">
+          <div className="flex-1 overflow-y-auto mb-5 flex flex-col gap-4 w-full max-w-[640px] mx-auto">
             {/* Greeting */}
             <div className="flex justify-start gap-3">
               <Avatar size="sm" />
@@ -372,7 +372,7 @@ export default function ChatPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSendMessage} className="flex gap-3">
+          <form onSubmit={handleSendMessage} className="flex gap-3 w-full max-w-[640px] mx-auto">
             <input
               id="chat-input"
               type="text"
