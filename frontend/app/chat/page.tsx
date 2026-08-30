@@ -8,7 +8,7 @@ import { MoodCheckinModal } from '@/components/common/MoodCheckinModal';
 import { Avatar } from '@/components/common/Avatar';
 import { Icon } from '@/components/ui/Icon';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
-import { ROUTES, CRISIS_ALERT_STORAGE_KEY } from '@/lib/constants';
+import { ROUTES, CRISIS_ALERT_STORAGE_KEY, COMFORT_MODE_STORAGE_KEY } from '@/lib/constants';
 import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { ChatMessage, ComfortMode, Conversation, UserPreferences } from '@/lib/types';
 
@@ -27,7 +27,10 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
-  const [comfortMode, setComfortMode] = useState<ComfortMode>('just_listen');
+  const [comfortMode, setComfortMode] = useState<ComfortMode>(() => {
+    if (typeof window === 'undefined') return 'just_listen';
+    return (sessionStorage.getItem(COMFORT_MODE_STORAGE_KEY) as ComfortMode | null) || 'just_listen';
+  });
   const [showMoodCheckin, setShowMoodCheckin] = useState(false);
   const [loggedMood, setLoggedMood] = useState<number | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -81,6 +84,10 @@ export default function ChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  useEffect(() => {
+    sessionStorage.setItem(COMFORT_MODE_STORAGE_KEY, comfortMode);
+  }, [comfortMode]);
 
   const handleMoodSubmit = async (moodScore: number, moodEmoji: string) => {
     await submitMoodCheckin(moodScore, moodEmoji);

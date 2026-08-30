@@ -70,6 +70,11 @@ export const LANGUAGES = [
 // redirect — cleared as soon as the Safety Mode screen reads it.
 export const CRISIS_ALERT_STORAGE_KEY = 'umeed-crisis-alert';
 
+// sessionStorage key for the chat page's selected support style (comfort
+// mode) — persisted so it survives the chat page unmounting when a crisis
+// redirect sends the user to Safety Mode and back.
+export const COMFORT_MODE_STORAGE_KEY = 'umeed-comfort-mode';
+
 // App routes
 export const ROUTES = {
   home: '/',

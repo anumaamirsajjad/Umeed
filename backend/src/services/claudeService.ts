@@ -76,7 +76,7 @@ export async function sendMessage(
         'X-Title': 'Umeed - Mental Health Companion',
       },
       body: JSON.stringify({
-        model: 'openai/gpt-3.5-turbo',
+        model: 'minimax/minimax-m3:free',
         messages: messages,
         max_tokens: maxTokens,
         temperature: 0.9,
