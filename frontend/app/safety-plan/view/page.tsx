@@ -13,7 +13,7 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 function PlanSection({ title, icon, items, emptyLabel }: { title: string; icon: IconName; items: string[]; emptyLabel: string }) {
   return (
     <div className="space-y-2">
-      <h2 className="font-serif text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
+      <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
         <Icon name={icon} className="icon-inline text-primary-600 dark:text-primary-300" />
         {title}
       </h2>
@@ -99,7 +99,7 @@ export default function SafetyPlanViewPage() {
             ) : (
               <>
                 <div className="text-center space-y-1">
-                  <h1 className="font-serif text-2xl font-bold text-ink-light dark:text-ink-dark">
+                  <h1 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark">
                     My Personal Safety Plan
                   </h1>
                   {plan.updatedAt && (
@@ -114,7 +114,7 @@ export default function SafetyPlanViewPage() {
                   <PlanSection title="Coping Strategies" icon="leaf" items={plan.copingStrategies} emptyLabel="Nothing added yet." />
 
                   <div className="space-y-2">
-                    <h2 className="font-serif text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
+                    <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
                       <Icon name="people" className="icon-inline text-primary-600 dark:text-primary-300" />
                       People in Your Corner
                     </h2>

@@ -325,7 +325,7 @@ export default function SafetyPlanBuilder() {
 
         <div className="mt-8">
           <Button
-            variant="secondary"
+            variant="ghost"
             loading={suggesting}
             onClick={handleSuggest}
           >

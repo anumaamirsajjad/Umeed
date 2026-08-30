@@ -42,7 +42,7 @@ export default function BreathingExercisePage() {
 
       <div className="flex-1 flex flex-col items-center justify-center gap-10 px-6 pb-16">
         <div className="text-center space-y-1">
-          <h1 className="font-serif text-2xl font-bold text-ink-light dark:text-ink-dark">Let's breathe together</h1>
+          <h1 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark">Let's breathe together</h1>
           <p className="text-sm text-ink-muted">Follow the circle. No need to rush.</p>
         </div>
 
@@ -54,7 +54,7 @@ export default function BreathingExercisePage() {
               transition: `transform ${phase.duration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
             }}
           />
-          <span className="relative font-serif text-xl font-bold text-white drop-shadow-sm" aria-live="polite">
+          <span className="relative font-display text-xl font-bold text-white drop-shadow-sm" aria-live="polite">
             {phase.name}
           </span>
         </div>
