@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/authMiddleware.js';
 import { filterResources, matchForUser, searchResources } from '../services/resourcesService.js';
 import { logger } from '../utils/logger.js';
 
@@ -6,12 +7,17 @@ import { logger } from '../utils/logger.js';
  * GET /resources
  * Get crisis resources, optionally filtered by region or type, and split
  * into resources matching the user's stated preferences vs everything else.
+ * Personalization uses the authenticated user's id from their Bearer token
+ * (via optionalAuth), when present — never a client-supplied id, since this
+ * route is public and an untrusted userId would let anyone probe whether an
+ * account exists or infer its saved preferences.
  */
-export async function handleGetResources(req: Request, res: Response): Promise<void> {
+export async function handleGetResources(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const { region, type, city, userId } = req.query;
+    const { region, type, city } = req.query;
+    const userId = req.user?.userId;
 
-    logger.info(`Fetching resources: region=${region}, type=${type}, city=${city}, userId=${userId}`);
+    logger.info(`Fetching resources: region=${region}, type=${type}, city=${city}, authenticated=${!!userId}`);
 
     const resources = filterResources({
       region: typeof region === 'string' ? region : undefined,
@@ -19,7 +25,7 @@ export async function handleGetResources(req: Request, res: Response): Promise<v
       city: typeof city === 'string' ? city : undefined,
     });
 
-    const response = await matchForUser(resources, typeof userId === 'string' ? userId : undefined);
+    const response = await matchForUser(resources, userId);
 
     res.json(response);
   } catch (error) {

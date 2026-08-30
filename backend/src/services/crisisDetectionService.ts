@@ -96,6 +96,7 @@ const NEGATION_CONTEXT_PATTERNS: RegExp[] = [
   /statistics|rates?\s+(are|have|is|increasing|rising|falling)/i,
   /according\s*to\s*(who|cdc|the)/i,
   /movie|film|character|documentary|book|novel|show/i,
+  /medication|antidepressant|prescription|dosage|\bdose\b|side.?effect/i,
   /used\s*to\s*(feel|be|have)|in\s*the\s*past|no\s*longer|from\s*my\s*past|but\s*i'?m\s*(much\s*)?better\s*now|but\s*i'?m\s*getting\s*help/i,
   /committed\s*suicide\s*in\s*\d{4}|died\s*(by|from)\s*suicide\s*in\s*\d{4}/i,
   // A year mention alongside a bare "suicide" reference reads as a historical/biographical fact.

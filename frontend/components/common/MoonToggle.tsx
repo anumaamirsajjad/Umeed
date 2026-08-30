@@ -2,10 +2,17 @@
 
 import { useTheme } from '@/lib/useTheme';
 
-// Persistent dark-mode toggle, fixed top-right on every screen per design spec.
-export function MoonToggle() {
+interface MoonToggleProps {
+  size?: 'sm' | 'lg';
+}
+
+// Dark-mode toggle. No longer self-positions — callers place it in their own
+// layout (SidebarNav for authenticated pages, inline in the header for the
+// 3 public pages) so it never overlaps page content.
+export function MoonToggle({ size = 'lg' }: MoonToggleProps) {
   const [theme, setTheme] = useTheme();
   const isDark = theme === 'dark';
+  const dims = size === 'sm' ? 'h-9 w-9 rounded-lg' : 'h-10 w-10 rounded-pill';
 
   return (
     <button
@@ -13,10 +20,10 @@ export function MoonToggle() {
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-pressed={isDark}
-      className="fixed top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-pill
+      className={`flex items-center justify-center ${dims}
         bg-surface text-ink-light shadow-sm border border-primary-100
         hover:bg-primary-50 active:bg-primary-100
-        dark:bg-surface-darker dark:text-ink-dark dark:border-primary-900/40 dark:hover:bg-primary-900/20"
+        dark:bg-surface-darker dark:text-ink-dark dark:border-primary-900/40 dark:hover:bg-primary-900/20`}
     >
       {isDark ? (
         <svg className="icon-inline" viewBox="0 0 24 24" fill="none" aria-hidden="true">

@@ -5,6 +5,7 @@ import { logger } from './utils/logger.js';
 import { initializeDatabase } from './db/init.js';
 import authRoutes from './routes/auth.js';
 import chatRoutes from './routes/chat.js';
+import conversationsRoutes from './routes/conversations.js';
 import onboardingRoutes from './routes/onboarding.js';
 import resourcesRoutes from './routes/resources.js';
 import safetyPlanRoutes from './routes/safety-plan.js';
@@ -38,6 +39,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/auth', authRoutes);
 app.use('/chat', chatRoutes);
+app.use('/conversations', conversationsRoutes);
 app.use('/onboarding', onboardingRoutes);
 app.use('/resources', resourcesRoutes);
 app.use('/safety-plan', safetyPlanRoutes);

@@ -8,7 +8,7 @@ and file map. This doc covers day-to-day dev workflow.
 ```bash
 # Backend — http://localhost:5000
 cd backend
-cp .env.example .env   # set ANTHROPIC_API_KEY at minimum
+cp .env.example .env   # set ANTHROPIC_API_KEY and JWT_SECRET at minimum
 npm install
 npm run dev
 
@@ -20,7 +20,8 @@ npm run dev
 ```
 
 Data persists to `backend/data/*.json` (gitignored) via `db/jsonStore.ts` — a minimal
-file-backed key/value store, not a real database. Delete that directory to reset local state.
+file-backed key/value store, not a real database. This includes user preferences, safety plans,
+conversations, messages, and mood check-ins. Delete that directory to reset local state.
 
 ## Testing
 
@@ -28,7 +29,9 @@ file-backed key/value store, not a real database. Delete that directory to reset
 cd backend
 npm run test:crisis-detection    # offline, no API calls — regex safety net, run this often
 npm run test:crisis-classifier   # hits the live classifier model — costs API calls
-npm run test:system-prompt       # hits the live Claude API — costs API calls
+npm run test:system-prompt       # hits the live OpenRouter API (gpt-3.5-turbo) — costs API calls
+npm run test:system-prompt-personalization # offline, no API calls — validates preference personalization
+npm run test:pattern-detection   # offline, no API calls — validates pattern detection logic
 npm run type-check               # tsc --noEmit
 npm run lint
 
@@ -63,6 +66,10 @@ phrasing to `crisisDetectionService.ts`, add its test case to
   malformed input can surface as a 500 instead of a clean 400 — see `docs/SECURITY_REVIEW.md`.
 - The file-backed data store is not concurrency-safe and, on most PaaS free tiers, not
   durable across redeploys — see `docs/DEPLOYMENT.md`.
+- `backend/src/services/sessionService.ts` (the old in-memory, single-slot-per-user chat
+  session store) was replaced by `backend/src/services/conversationService.ts` (JSON-file-backed,
+  multi-conversation). The legacy `POST /chat/new` endpoint has been removed; conversation
+  creation is now lazy via `POST /chat` (omit `conversationId` to start a new one).
 
 ## Where Things Are
 

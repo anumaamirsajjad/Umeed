@@ -2,12 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { getPreferences, updatePreferences, resetPassword } from '@/lib/api';
+import { useRequireAuth } from '@/lib/useRequireAuth';
+import { useAuth } from '@/lib/authContext';
 import type { UserPreferences } from '@/lib/types';
+import { Button } from '@/components/ui/Button';
+import { Input, Select } from '@/components/ui/Input';
+import { Chip } from '@/components/ui/Chip';
+import { Icon } from '@/components/ui/Icon';
+import { MoonToggle } from '@/components/common/MoonToggle';
 import {
   SUPPORT_STYLE_OPTIONS,
   TOPICS_OF_CONCERN,
+  COMMON_TOPICS_TO_AVOID,
   LANGUAGES,
   ROUTES,
 } from '@/lib/constants';
@@ -15,21 +22,24 @@ import {
 type Tab = 'preferences' | 'password';
 
 export default function ProfilePage() {
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  const { logout } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('preferences');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
+  const [dirty, setDirty] = useState(false);
 
-  // Password reset form
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  // Load preferences
   useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
     const loadPreferences = async () => {
       try {
         const prefs = await getPreferences();
@@ -42,7 +52,34 @@ export default function ProfilePage() {
     };
 
     loadPreferences();
-  }, []);
+  }, [authLoading, isAuthenticated]);
+
+  // Edited preferences used to vanish silently on tab switch or navigation.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
+
+  // Single funnel for preference edits so `dirty` can't drift out of sync.
+  const editPreferences = (patch: Partial<UserPreferences>) => {
+    setPreferences((prev) => (prev ? { ...prev, ...patch } : prev));
+    setDirty(true);
+  };
+
+  const handleLogout = () => {
+    if (dirty && !window.confirm('You have unsaved changes. Sign out anyway?')) return;
+    logout();
+    router.replace(ROUTES.login);
+  };
+
+  const handleTabChange = (next: Tab) => {
+    if (dirty && next !== tab && !window.confirm('You have unsaved changes. Leave this tab anyway?')) return;
+    setError('');
+    setSuccessMessage('');
+    setTab(next);
+  };
 
   const handleSavePreferences = async () => {
     if (!preferences) return;
@@ -53,7 +90,8 @@ export default function ProfilePage() {
 
     try {
       await updatePreferences(preferences);
-      setSuccessMessage('Preferences updated successfully');
+      setSuccessMessage('Preferences saved');
+      setDirty(false);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update preferences');
@@ -63,8 +101,6 @@ export default function ProfilePage() {
   };
 
   const handlePasswordReset = async () => {
-    if (!preferences) return;
-
     if (!currentPassword || !newPassword || !confirmPassword) {
       setError('All password fields are required');
       return;
@@ -101,484 +137,225 @@ export default function ProfilePage() {
   const handleTopicToggle = (topic: string) => {
     if (!preferences) return;
     const current = preferences.topicsOfConcern || [];
-    const updated = current.includes(topic)
-      ? current.filter((t) => t !== topic)
-      : [...current, topic];
-    setPreferences({ ...preferences, topicsOfConcern: updated });
+    editPreferences({
+      topicsOfConcern: current.includes(topic) ? current.filter((t) => t !== topic) : [...current, topic],
+    });
+  };
+
+  const handleAvoidTopicToggle = (topic: string) => {
+    if (!preferences) return;
+    const current = preferences.topicsToAvoid || [];
+    editPreferences({
+      topicsToAvoid: current.includes(topic) ? current.filter((t) => t !== topic) : [...current, topic],
+    });
   };
 
   const handleSupportStyleChange = (style: string) => {
-    if (!preferences) return;
-    setPreferences({ ...preferences, preferredSupportStyle: style as any });
+    editPreferences({ preferredSupportStyle: style as UserPreferences['preferredSupportStyle'] });
   };
 
   const handleLanguageChange = (code: string) => {
-    if (!preferences) return;
-    setPreferences({ ...preferences, languages: [code] });
+    editPreferences({ languages: [code] });
   };
 
   if (loading && !preferences) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--umeed-beige-50)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{
-            fontSize: '18px',
-            color: 'var(--umeed-ink-500)',
-          }}>
-            Loading profile...
-          </p>
-        </div>
+      <div className="min-h-[100dvh] flex items-center justify-center bg-surface-light dark:bg-surface-dark">
+        <p className="text-lg text-ink-muted">Loading profile...</p>
       </div>
     );
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--umeed-beige-50)',
-      paddingLeft: '80px',
-    }}>
-      {/* Header */}
-      <div style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-        backdropFilter: 'blur(10px)',
-        padding: '20px 40px',
-        borderBottom: '1px solid var(--umeed-orange-200)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
-        <h1 style={{
-          fontSize: '28px',
-          fontFamily: "'Fraunces', Georgia, serif",
-          fontWeight: 700,
-          color: 'var(--umeed-ink-900)',
-          margin: 0,
-        }}>
-          Profile Settings
-        </h1>
-        <Link
-          href={ROUTES.chat}
-          style={{
-            backgroundColor: 'var(--umeed-orange-500)',
-            color: 'white',
-            padding: '10px 20px',
-            borderRadius: '9999px',
-            fontWeight: 700,
-            fontSize: '14px',
-            textDecoration: 'none',
-            transition: 'all 300ms',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--umeed-orange-700)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--umeed-orange-500)';
-          }}
-        >
-          Back to Chat
-        </Link>
-      </div>
-
-      {/* Content */}
-      <div style={{
-        maxWidth: '600px',
-        margin: '40px auto',
-        paddingLeft: '20px',
-        paddingRight: '20px',
-      }}>
-        {/* Tabs */}
-        <div style={{
-          display: 'flex',
-          gap: '12px',
-          marginBottom: '32px',
-          borderBottom: '1px solid var(--umeed-orange-100)',
-        }}>
+    <div className="min-h-[100dvh] bg-surface-light dark:bg-surface-dark">
+      {/* md:top offset clears the floating desktop nav pill; on mobile the nav
+          is a bottom bar so top-0 is correct there. */}
+      <div className="bg-surface/80 dark:bg-surface-darker/80 backdrop-blur px-6 py-5 border-b border-primary-100 dark:border-primary-900/40 flex justify-between items-center gap-4 sticky top-0 md:top-[var(--nav-h)] z-10">
+        <h1 className="font-display text-section font-bold text-ink-light dark:text-ink-dark">Profile Settings</h1>
+        <div className="flex items-center gap-2">
+          <MoonToggle size="sm" />
           <button
-            onClick={() => setTab('preferences')}
-            style={{
-              padding: '12px 24px',
-              borderRadius: '0',
-              border: 'none',
-              backgroundColor: 'transparent',
-              borderBottom: tab === 'preferences' ? '3px solid var(--umeed-orange-500)' : 'none',
-              color: tab === 'preferences' ? 'var(--umeed-orange-500)' : 'var(--umeed-ink-500)',
-              fontWeight: 700,
-              cursor: 'pointer',
-              transition: 'all 300ms',
-            }}
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex items-center gap-1.5 rounded-pill min-h-11 px-4 text-sm font-semibold text-ink-muted hover:text-crisis-700 dark:hover:text-crisis-300 transition-colors duration-micro ease-umeed"
           >
-            Preferences
-          </button>
-          <button
-            onClick={() => setTab('password')}
-            style={{
-              padding: '12px 24px',
-              borderRadius: '0',
-              border: 'none',
-              backgroundColor: 'transparent',
-              borderBottom: tab === 'password' ? '3px solid var(--umeed-orange-500)' : 'none',
-              color: tab === 'password' ? 'var(--umeed-orange-500)' : 'var(--umeed-ink-500)',
-              fontWeight: 700,
-              cursor: 'pointer',
-              transition: 'all 300ms',
-            }}
-          >
-            Password
+            <Icon name="logout" className="h-[18px] w-[18px]" />
+            Sign out
           </button>
         </div>
+      </div>
 
-        {/* Error and Success Messages */}
+      <div className="max-w-xl mx-auto px-5 py-10">
+        <div role="tablist" aria-label="Profile sections" className="flex gap-6 mb-8 border-b border-primary-100 dark:border-primary-900/40">
+          {(['preferences', 'password'] as Tab[]).map((t) => (
+            <button
+              key={t}
+              type="button"
+              role="tab"
+              id={`tab-${t}`}
+              aria-selected={tab === t}
+              aria-controls={`panel-${t}`}
+              tabIndex={tab === t ? 0 : -1}
+              onClick={() => handleTabChange(t)}
+              className={`px-1 pb-3 min-h-11 font-semibold text-sm capitalize transition-colors duration-quick ease-umeed border-b-2 -mb-px ${
+                tab === t
+                  ? 'border-primary-600 text-primary-700 dark:text-primary-300'
+                  : 'border-transparent text-ink-muted hover:text-ink-light dark:hover:text-ink-dark'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
         {error && (
-          <div style={{
-            backgroundColor: 'var(--umeed-crisis-100)',
-            border: `1px solid var(--umeed-crisis-300)`,
-            borderRadius: '8px',
-            padding: '12px 16px',
-            marginBottom: '20px',
-            color: 'var(--umeed-crisis-700)',
-            fontSize: '14px',
-          }}>
+          <div
+            role="alert"
+            className="bg-crisis-50 dark:bg-crisis-900/30 text-crisis-700 dark:text-crisis-300 rounded-lg px-4 py-3 mb-5 text-sm"
+          >
             {error}
           </div>
         )}
 
         {successMessage && (
-          <div style={{
-            backgroundColor: 'var(--umeed-green-100)',
-            border: `1px solid var(--umeed-green-300)`,
-            borderRadius: '8px',
-            padding: '12px 16px',
-            marginBottom: '20px',
-            color: 'var(--umeed-green-700)',
-            fontSize: '14px',
-          }}>
+          <div
+            role="status"
+            className="bg-primary-50 dark:bg-primary-900/20 text-primary-800 dark:text-primary-200 rounded-lg px-4 py-3 mb-5 text-sm flex items-center gap-2"
+          >
+            <Icon name="sparkle" className="icon-inline" />
             {successMessage}
           </div>
         )}
 
-        {/* Preferences Tab */}
         {tab === 'preferences' && preferences && (
-          <div>
-            {/* Name */}
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'var(--umeed-ink-900)',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                Your Name
-              </label>
-              <input
-                type="text"
-                value={preferences.name || ''}
-                onChange={(e) => setPreferences({ ...preferences, name: e.target.value })}
-                maxLength={50}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '9999px',
-                  border: `1px solid var(--umeed-orange-100)`,
-                  backgroundColor: 'white',
-                  color: 'var(--umeed-ink-900)',
-                  fontSize: '16px',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  outline: 'none',
-                  transition: 'all 300ms',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
+          <div role="tabpanel" id="panel-preferences" aria-labelledby="tab-preferences" className="space-y-8">
+            <Input
+              label="Your name"
+              value={preferences.name || ''}
+              onChange={(e) => editPreferences({ name: e.target.value })}
+              maxLength={50}
+            />
 
-            {/* Support Style */}
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'var(--umeed-ink-900)',
-                marginBottom: '16px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
+            <div>
+              <span className="block text-sm font-semibold text-ink-light dark:text-ink-dark mb-3" id="support-style-label">
                 How do you prefer support?
-              </label>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-              }}>
+              </span>
+              <div className="flex flex-col gap-3" role="radiogroup" aria-labelledby="support-style-label">
                 {SUPPORT_STYLE_OPTIONS.map((option) => {
                   const checked = preferences.preferredSupportStyle === option.value;
                   return (
                     <button
                       key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={checked}
                       onClick={() => handleSupportStyleChange(option.value)}
-                      style={{
-                        textAlign: 'left',
-                        padding: '16px',
-                        borderRadius: '8px',
-                        border: checked ? 'none' : `1px solid var(--umeed-orange-100)`,
-                        backgroundColor: checked ? 'var(--umeed-orange-100)' : 'white',
-                        color: 'var(--umeed-ink-900)',
-                        transition: 'all 300ms',
-                        cursor: 'pointer',
-                      }}
+                      className={`text-left rounded-2xl p-4 transition-colors duration-quick ease-umeed ${
+                        checked
+                          ? 'bg-primary-100 dark:bg-primary-900/40'
+                          : 'border border-primary-100 dark:border-primary-900/40 hover:bg-primary-50 dark:hover:bg-primary-900/20'
+                      }`}
                     >
-                      <div style={{
-                        fontWeight: 700,
-                        fontSize: '16px',
-                        marginBottom: '4px',
-                      }}>
-                        {option.label}
-                      </div>
-                      <div style={{
-                        fontSize: '14px',
-                        color: 'var(--umeed-ink-500)',
-                      }}>
-                        {option.description}
-                      </div>
+                      <div className="font-semibold text-base text-ink-light dark:text-ink-dark mb-1">{option.label}</div>
+                      <div className="text-sm text-ink-muted">{option.description}</div>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Topics */}
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'var(--umeed-ink-900)',
-                marginBottom: '16px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                What's on your mind?
+            <div>
+              <label className="block text-sm font-semibold text-ink-light dark:text-ink-dark mb-3">
+                What&apos;s on your mind?
               </label>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '12px',
-              }}>
-                {TOPICS_OF_CONCERN.map((topic) => {
-                  const selected = preferences.topicsOfConcern?.includes(topic) || false;
-                  return (
-                    <button
-                      key={topic}
-                      onClick={() => handleTopicToggle(topic)}
-                      style={{
-                        padding: '16px 12px',
-                        borderRadius: '8px',
-                        border: selected ? 'none' : `1px solid var(--umeed-orange-100)`,
-                        backgroundColor: selected ? 'var(--umeed-orange-500)' : 'white',
-                        color: selected ? 'white' : 'var(--umeed-ink-900)',
-                        fontWeight: 700,
-                        fontSize: '14px',
-                        cursor: 'pointer',
-                        transition: 'all 300ms',
-                        textAlign: 'center',
-                      }}
-                    >
-                      {topic}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Language */}
-            <div style={{ marginBottom: '32px' }}>
-              <label htmlFor="language-select" style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'var(--umeed-ink-900)',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                Preferred Language
-              </label>
-              <select
-                id="language-select"
-                value={preferences.languages?.[0] || 'en'}
-                onChange={(e) => handleLanguageChange(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  border: `1px solid var(--umeed-orange-100)`,
-                  backgroundColor: 'white',
-                  color: 'var(--umeed-ink-900)',
-                  fontSize: '16px',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  outline: 'none',
-                  transition: 'all 300ms',
-                  cursor: 'pointer',
-                  boxSizing: 'border-box',
-                }}
-              >
-                {LANGUAGES.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.name}
-                  </option>
+              <div className="flex flex-wrap gap-2">
+                {TOPICS_OF_CONCERN.map((topic) => (
+                  <Chip key={topic} selected={preferences.topicsOfConcern?.includes(topic) || false} onClick={() => handleTopicToggle(topic)}>
+                    {topic}
+                  </Chip>
                 ))}
-              </select>
+              </div>
             </div>
 
-            {/* Save Button */}
-            <button
-              onClick={handleSavePreferences}
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                borderRadius: '9999px',
-                backgroundColor: 'var(--umeed-orange-500)',
-                color: 'white',
-                border: 'none',
-                fontWeight: 700,
-                fontSize: '16px',
-                cursor: 'pointer',
-                transition: 'all 300ms',
-                opacity: loading ? 0.7 : 1,
-              }}
+            <div>
+              <label className="block text-sm font-semibold text-ink-light dark:text-ink-dark mb-1">
+                Anything you&apos;d rather I steer away from?
+              </label>
+              <p className="text-sm text-ink-muted mb-3">
+                Optional. I&apos;ll acknowledge these if they come up but won&apos;t push deeper.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {COMMON_TOPICS_TO_AVOID.map((topic) => (
+                  <Chip
+                    key={topic}
+                    selected={preferences.topicsToAvoid?.includes(topic) || false}
+                    onClick={() => handleAvoidTopicToggle(topic)}
+                  >
+                    {topic}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="cultural-context-input" className="block text-sm font-semibold text-ink-light dark:text-ink-dark mb-2">
+                Anything about your background or culture you&apos;d like me to keep in mind? Optional.
+              </label>
+              <textarea
+                id="cultural-context-input"
+                placeholder="Share as much or as little as you'd like"
+                value={preferences.culturalContext || ''}
+                onChange={(e) => editPreferences({ culturalContext: e.target.value })}
+                rows={3}
+                maxLength={500}
+                className="w-full rounded-2xl border border-primary-200 dark:border-primary-900/50 bg-surface dark:bg-surface-dark px-4 py-3 text-base text-ink-light dark:text-ink-dark outline-none transition-colors duration-quick ease-umeed focus:border-primary-500 resize-vertical"
+              />
+            </div>
+
+            <Select
+              label="Preferred language"
+              value={preferences.languages?.[0] || 'en'}
+              onChange={(e) => handleLanguageChange(e.target.value)}
             >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
+              {LANGUAGES.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name}
+                </option>
+              ))}
+            </Select>
+
+            <Button size="lg" className="w-full rounded-pill" loading={loading} onClick={handleSavePreferences}>
+              {loading ? 'Saving...' : 'Save changes'}
+            </Button>
           </div>
         )}
 
-        {/* Password Tab */}
         {tab === 'password' && (
-          <div>
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'var(--umeed-ink-900)',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                Current Password
-              </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '9999px',
-                  border: `1px solid var(--umeed-orange-100)`,
-                  backgroundColor: 'white',
-                  color: 'var(--umeed-ink-900)',
-                  fontSize: '16px',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  outline: 'none',
-                  transition: 'all 300ms',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'var(--umeed-ink-900)',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                New Password
-              </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '9999px',
-                  border: `1px solid var(--umeed-orange-100)`,
-                  backgroundColor: 'white',
-                  color: 'var(--umeed-ink-900)',
-                  fontSize: '16px',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  outline: 'none',
-                  transition: 'all 300ms',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'var(--umeed-ink-900)',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '9999px',
-                  border: `1px solid var(--umeed-orange-100)`,
-                  backgroundColor: 'white',
-                  color: 'var(--umeed-ink-900)',
-                  fontSize: '16px',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  outline: 'none',
-                  transition: 'all 300ms',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            <button
-              onClick={handlePasswordReset}
-              disabled={passwordLoading}
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                borderRadius: '9999px',
-                backgroundColor: 'var(--umeed-orange-500)',
-                color: 'white',
-                border: 'none',
-                fontWeight: 700,
-                fontSize: '16px',
-                cursor: 'pointer',
-                transition: 'all 300ms',
-                opacity: passwordLoading ? 0.7 : 1,
-              }}
-            >
-              {passwordLoading ? 'Changing Password...' : 'Change Password'}
-            </button>
+          <div role="tabpanel" id="panel-password" aria-labelledby="tab-password" className="space-y-5">
+            <Input
+              label="Current password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+            <Input
+              label="New password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              autoComplete="new-password"
+            />
+            <Input
+              label="Confirm new password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
+            />
+            <Button size="lg" className="w-full rounded-pill" loading={passwordLoading} onClick={handlePasswordReset}>
+              {passwordLoading ? 'Changing password...' : 'Change password'}
+            </Button>
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getStoredAuth, setStoredAuth, clearStoredAuth } from './authStorage';
 
 interface User {
   id: string;
@@ -26,14 +27,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Restore session from localStorage on mount
   useEffect(() => {
-    const savedToken = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('authUser');
-
+    const { token: savedToken, user: savedUser } = getStoredAuth();
     if (savedToken && savedUser) {
       setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      setUser(savedUser);
     }
-
     setIsLoading(false);
   }, []);
 
@@ -54,9 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
       setToken(data.token);
       setUser(data.user);
-
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('authUser', JSON.stringify(data.user));
+      setStoredAuth(data.token, data.user);
     } finally {
       setIsLoading(false);
     }
@@ -79,9 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
       setToken(data.token);
       setUser(data.user);
-
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('authUser', JSON.stringify(data.user));
+      setStoredAuth(data.token, data.user);
     } finally {
       setIsLoading(false);
     }
@@ -90,8 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
+    clearStoredAuth();
   };
 
   return (

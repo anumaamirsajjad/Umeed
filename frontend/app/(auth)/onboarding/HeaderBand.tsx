@@ -23,7 +23,7 @@ export function HeaderBand({ heading, subtext }: HeaderBandProps) {
         <path d="M11.5 15.5l-3-3" />
         <path d="M28.5 15.5l3-3" />
       </svg>
-      <h1 className="font-serif text-2xl font-bold text-ink-light dark:text-ink-dark">{heading}</h1>
+      <h1 className="font-display text-section font-bold text-ink-light dark:text-ink-dark">{heading}</h1>
       <p className="mt-2 text-sm text-ink-muted">{subtext}</p>
     </div>
   );

@@ -1,13 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ROUTES, CRISIS_ALERT_STORAGE_KEY } from '@/lib/constants';
 import { ACTIVE_EMERGENCY_CONTACT, ACTIVE_CRISIS_HELPLINE, type EmergencyContact } from '@/lib/emergencyContacts';
+import { Icon } from '@/components/ui/Icon';
 import type { CrisisAlert } from '@/lib/types';
+
+/**
+ * A number is never shown bare. `service` says what the line actually reaches,
+ * because "Emergency services · 15" alone doesn't tell someone in crisis that
+ * 15 is the police control room and not a mental-health line.
+ */
+function EmergencyCard({ contact }: { contact: EmergencyContact }) {
+  return (
+    <a
+      href={`tel:${contact.tel}`}
+      className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-white px-6 py-7 text-crisis-600 transition-transform duration-quick ease-umeed hover:scale-[1.02] hover:shadow-lg"
+    >
+      <span className="text-2xl font-bold">{contact.label}</span>
+      <span className="text-4xl font-bold tracking-tight">{contact.number}</span>
+      <span className="mt-1 text-sm font-medium text-crisis-700">{contact.service}</span>
+    </a>
+  );
+}
 
 export default function CrisisSafetyModePage() {
   const [alert, setAlert] = useState<CrisisAlert | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     try {
@@ -21,271 +41,83 @@ export default function CrisisSafetyModePage() {
     }
   }, []);
 
+  // The redirect out of chat is a full page navigation, so assistive tech would
+  // otherwise stay wherever it was. Move focus to the heading on arrival.
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
+
+  // Resources without a phone number would otherwise render as a tappable
+  // `tel:undefined` button that dials nothing.
+  const callableResources = (alert?.resources ?? []).filter((r) => r.phone).slice(0, 3);
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--umeed-crisis-600)',
-      color: 'white',
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '24px',
-    }}>
-      {/* Back button */}
-      <div style={{ marginBottom: '40px' }}>
-        <Link
-          href={ROUTES.chat}
-          style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '16px',
-            fontWeight: 700,
-            opacity: 0.9,
-            display: 'inline-block',
-            padding: '8px 0',
-          }}
-        >
-          ← Back to chat
-        </Link>
-      </div>
-
-      {/* Main content */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        textAlign: 'center',
-        gap: '40px',
-        maxWidth: '600px',
-        margin: '0 auto',
-      }}>
-        {/* Message */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-        }}>
-          <h1 style={{
-            fontSize: '56px',
-            fontFamily: "'Fraunces', Georgia, serif",
-            fontWeight: 700,
-            margin: 0,
-            lineHeight: 1.2,
-          }}>
-            You're here.
+    <div className="min-h-[100dvh] bg-crisis-600 text-white flex flex-col p-6 animate-settle">
+      <div className="flex-1 flex flex-col items-center justify-center text-center gap-10 max-w-xl mx-auto w-full">
+        <div className="flex flex-col gap-4">
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="font-display text-hero font-bold leading-tight outline-none"
+          >
+            You&apos;re here.
           </h1>
-          <p style={{
-            fontSize: '20px',
-            margin: 0,
-            opacity: 0.95,
-            lineHeight: 1.6,
-          }}>
-            That matters. This is a safe space. You don't have to figure everything out right now.
+          <p className="text-xl leading-relaxed">
+            That matters. This is a safe space. You don&apos;t have to figure everything out right now.
           </p>
-          {alert?.message && (
-            <p style={{
-              fontSize: '18px',
-              margin: '16px 0 0 0',
-              opacity: 0.9,
-              fontWeight: 500,
-            }}>
-              {alert.message}
-            </p>
-          )}
+          {alert?.message && <p className="mt-2 text-lg font-medium">{alert.message}</p>}
         </div>
 
-        {/* Emergency contacts - oversized for touch */}
-        <div style={{
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-        }}>
-          <p style={{
-            fontSize: '14px',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            opacity: 0.8,
-            margin: 0,
-          }}>
-            Call now if in danger
-          </p>
-
-          {/* Emergency contact button - 48px minimum */}
-          <a
-            href={`tel:${ACTIVE_EMERGENCY_CONTACT.tel}`}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: '32px 24px',
-              backgroundColor: 'white',
-              color: 'var(--umeed-crisis-600)',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              fontWeight: 700,
-              transition: 'all 300ms',
-              minHeight: '80px',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.02)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <span style={{ fontSize: '28px', marginBottom: '8px' }}>
-              {ACTIVE_EMERGENCY_CONTACT.label}
-            </span>
-            <span style={{ fontSize: '32px', fontWeight: 700 }}>
-              {ACTIVE_EMERGENCY_CONTACT.number}
-            </span>
-          </a>
-
-          {/* Crisis helpline button */}
-          <a
-            href={`tel:${ACTIVE_CRISIS_HELPLINE.tel}`}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: '32px 24px',
-              backgroundColor: 'white',
-              color: 'var(--umeed-crisis-600)',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              fontWeight: 700,
-              transition: 'all 300ms',
-              minHeight: '80px',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.02)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <span style={{ fontSize: '28px', marginBottom: '8px' }}>
-              {ACTIVE_CRISIS_HELPLINE.label}
-            </span>
-            <span style={{ fontSize: '32px', fontWeight: 700 }}>
-              {ACTIVE_CRISIS_HELPLINE.number}
-            </span>
-          </a>
+        <div className="w-full flex flex-col gap-4">
+          <p className="text-sm font-bold uppercase tracking-wide">Call now if in danger</p>
+          <EmergencyCard contact={ACTIVE_EMERGENCY_CONTACT} />
+          <EmergencyCard contact={ACTIVE_CRISIS_HELPLINE} />
         </div>
 
-        {/* Other resources */}
-        {alert?.resources && alert.resources.length > 0 && (
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            marginTop: '24px',
-            paddingTop: '24px',
-            borderTop: '1px solid rgba(255,255,255,0.2)',
-          }}>
-            <p style={{
-              fontSize: '14px',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              opacity: 0.8,
-              margin: 0,
-            }}>
-              Other resources
-            </p>
-            {alert.resources.slice(0, 3).map((resource) => (
+        {callableResources.length > 0 && (
+          <div className="w-full flex flex-col gap-3 mt-6 pt-6 border-t border-white/30">
+            <p className="text-sm font-bold uppercase tracking-wide">Other resources</p>
+            {callableResources.map((resource) => (
               <a
                 key={resource.id}
                 href={`tel:${resource.phone}`}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '20px 24px',
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                  color: 'white',
-                  borderRadius: '8px',
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                  transition: 'all 300ms',
-                  minHeight: '60px',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)';
-                  e.currentTarget.style.transform = 'translateX(4px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
-                  e.currentTarget.style.transform = 'translateX(0)';
-                }}
+                className="flex justify-between items-center gap-3 min-h-[60px] px-6 py-5 bg-white/15 hover:bg-white/25 rounded-2xl font-semibold transition-all duration-quick ease-umeed hover:translate-x-1"
               >
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '16px', fontWeight: 700 }}>
-                    {resource.name}
-                  </div>
-                  {resource.description && (
-                    <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                      {resource.description}
-                    </div>
-                  )}
-                </div>
-                {resource.phone && (
-                  <div style={{ fontSize: '18px', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                    {resource.phone}
-                  </div>
-                )}
+                <span className="text-left">
+                  <span className="block text-base font-bold">{resource.name}</span>
+                  {resource.description && <span className="block text-xs">{resource.description}</span>}
+                </span>
+                <span className="text-lg font-bold whitespace-nowrap">{resource.phone}</span>
               </a>
             ))}
           </div>
         )}
+
+        <div className="w-full flex flex-col gap-3">
+          <Link
+            href={ROUTES.breathe}
+            className="w-full flex items-center justify-center gap-2 rounded-2xl border border-white/50 px-6 py-4 font-semibold hover:bg-white/10 transition-colors duration-quick ease-umeed"
+          >
+            <Icon name="heart" className="icon-inline" />
+            Try a breathing exercise
+          </Link>
+          <Link
+            href={ROUTES.resources}
+            className="w-full min-h-12 flex items-center justify-center rounded-2xl bg-white text-crisis-600 font-bold hover:scale-[1.02] transition-transform duration-quick ease-umeed"
+          >
+            View all support resources
+          </Link>
+        </div>
       </div>
 
-      {/* Bottom actions */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        marginTop: '40px',
-      }}>
+      {/* The way out sits last — in the DOM and on screen. Nothing should be
+          tabbed through before the emergency numbers. */}
+      <div className="mt-10 flex justify-center">
         <Link
-          href={ROUTES.resources}
-          style={{
-            textAlign: 'center',
-            padding: '16px 24px',
-            backgroundColor: 'white',
-            color: 'var(--umeed-crisis-600)',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontWeight: 700,
-            fontSize: '16px',
-            minHeight: '48px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 300ms',
-            cursor: 'pointer',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.02)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
+          href={ROUTES.chat}
+          className="inline-flex items-center gap-1.5 py-2 text-base font-bold underline underline-offset-4 hover:no-underline transition-all duration-quick ease-umeed"
         >
-          View all support resources
+          ← Back to chat
         </Link>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import express from 'express';
+import { optionalAuth } from '../middleware/authMiddleware.js';
 import { handleGetResources, handleSearchResources } from '../controllers/resourcesController.js';
 
 const router = express.Router();
@@ -11,7 +12,11 @@ const router = express.Router();
  * - region?: 'north-america' | 'europe' | 'asia-pacific' | 'south-asia' | 'global'
  * - type?: 'crisis_hotline' | 'professional' | 'support_group' | 'online_resource'
  * - city?: string (e.g. 'Karachi') — resources with no city are nationwide and always included
- * - userId?: string (for personalized matching in future)
+ *
+ * Public route — no login required. If a valid Bearer token is present
+ * (optionalAuth), personalized matching uses that authenticated user's
+ * preferences; otherwise matching is skipped, same as today for an
+ * anonymous visitor.
  *
  * Response:
  * {
@@ -19,7 +24,7 @@ const router = express.Router();
  *   other: CrisisResource[]     // All other resources
  * }
  */
-router.get('/', handleGetResources);
+router.get('/', optionalAuth, handleGetResources);
 
 /**
  * GET /resources/search

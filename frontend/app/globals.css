@@ -2,45 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design Tokens - Light mode is default */
+/* Design tokens — light mode is the default.
+   The `umeed-*` var names are kept for the handful of inline-style consumers
+   (app/layout.tsx body, safety-plan/builder) that read them directly. Values
+   are the sage + warm-clay system; this file is the single source of truth. */
 :root {
-  /* Primary Palette - Warm Orange */
-  --umeed-orange-500: #F46B1F;
-  --umeed-orange-700: #C4491A;
-  --umeed-orange-100: #FDE3CE;
+  /* Primary — muted sage */
+  --umeed-orange-500: #7C9885;
+  --umeed-orange-700: #56705F;
+  --umeed-orange-100: #E2EBE3;
 
-  /* Neutrals (Warm) */
-  --umeed-beige-50: #FBF3E7;    /* Canvas/background */
-  --umeed-beige-200: #F2E4D0;   /* Surface/panels */
-  --umeed-ink-900: #3A2A1C;     /* Primary text */
-  --umeed-ink-500: #8C765F;     /* Secondary/muted */
+  /* Neutrals — warm off-whites, warm ink. No pure black anywhere. */
+  --umeed-beige-50: #F7F4EF;    /* canvas */
+  --umeed-beige-200: #EDE8DE;   /* panels */
+  --umeed-ink-900: #3D3A33;     /* primary text */
+  --umeed-ink-500: #6B6659;     /* secondary text */
 
   /* Semantic */
-  --umeed-green-600: #3F7D4E;   /* Pattern insight ONLY */
-  --umeed-crisis-600: #C0392B;  /* Crisis mode ONLY */
+  --umeed-green-600: #56705F;   /* pattern insight ONLY */
+  --umeed-crisis-600: #C0392B;  /* crisis mode ONLY — safety-critical */
+
+  /* Signature: the jali lattice, and the lamp behind it. */
+  --jali-line: rgba(61, 58, 51, 0.055);
+  --lamp: #F2E9DF;
+  --lamp-glow: rgba(176, 137, 104, 0.30);
+
+  /* Navigation height, consumed by AppShell and any full-height page.
+     Overridden per-breakpoint by AppShell; 0 when no nav is shown. */
+  --nav-h: 0px;
 
   /* Motion */
   --ease-umeed: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-quick: 300ms;
   --duration-standard: 400ms;
 
-  /* Force light mode by default - override system preference */
   color-scheme: light;
 }
 
-/* Dark Mode - Only applies when .dark class is explicitly set */
+/* Dark mode — warm charcoal, not blue-grey. Only when .dark is explicitly set. */
 :root.dark {
-  --umeed-beige-50: #241811;
-  --umeed-beige-200: #342418;
-  --umeed-ink-900: #F5F0EA;
-  --umeed-ink-500: #C4B3A0;
-  --umeed-orange-500: #FF8A42;
-  --umeed-orange-700: #FFAA5F;
+  --umeed-beige-50: #1F1D1A;
+  --umeed-beige-200: #2A2724;
+  --umeed-ink-900: #EDEBE7;
+  --umeed-ink-500: #B3ADA1;
+  --umeed-orange-500: #93AC97;
+  --umeed-orange-700: #ACC2AE;
+  --umeed-orange-100: #2F3A31;
+  --jali-line: rgba(237, 235, 231, 0.05);
+  --lamp: #3A322A;
+  --lamp-glow: rgba(224, 169, 109, 0.32);
   color-scheme: dark;
-}
-
-* {
-  @apply border-opacity-100;
 }
 
 html {
@@ -52,20 +63,27 @@ body {
   color: var(--umeed-ink-900);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 16px;
-  line-height: 1.5;
-  transition: background-color var(--duration-standard) var(--ease-umeed), color var(--duration-standard) var(--ease-umeed);
+  line-height: 1.6;
+  transition: background-color var(--duration-standard) var(--ease-umeed),
+              color var(--duration-standard) var(--ease-umeed);
 }
 
+/* Fluid display type — the old fixed 64px h1 was the single worst mobile
+   offender, overflowing every small viewport. */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.15;
   color: var(--umeed-ink-900);
+  text-wrap: balance;
 }
 
-h1 { font-size: 64px; }
-h2 { font-size: 44px; }
-h3 { font-size: 28px; }
+h1 { font-size: clamp(2rem, 1.4rem + 3vw, 4rem); letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.6rem, 1.25rem + 1.75vw, 2.75rem); letter-spacing: -0.01em; }
+h3 { font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.75rem); }
+
+/* Give prose a comfortable measure so long text can breathe. */
+.measure { max-width: 65ch; }
 
 /* Urdu text */
 .urdu-text {
@@ -84,7 +102,6 @@ h3 { font-size: 28px; }
   color: var(--umeed-ink-900);
 }
 
-/* Smooth transitions on interactive elements */
 button,
 input,
 textarea,
@@ -92,7 +109,6 @@ select {
   @apply transition-all duration-quick ease-umeed;
 }
 
-/* Accessible focus states */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -102,18 +118,46 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-/* Icon sizing proportional to adjacent text */
 .icon-inline {
   height: 1.2em;
   width: 1.2em;
   flex-shrink: 0;
 }
 
-/* Reduced motion accessibility */
+/* Signature texture: a quiet crossed-hairline lattice, echoing the jali
+   screens used in South-Asian architecture to filter light without blocking
+   it — used sparingly (hero backdrops, nav, empty states), never under body text. */
+.jali-bg {
+  background-image:
+    repeating-linear-gradient(45deg, var(--jali-line) 0 1.5px, transparent 1.5px 26px),
+    repeating-linear-gradient(-45deg, var(--jali-line) 0 1.5px, transparent 1.5px 26px);
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 700ms var(--ease-umeed) both;
+}
+
+/* Arrival, not transition — used by Safety Mode so a hard navigation lands
+   as a deliberate, settling moment rather than a jump cut. */
+@keyframes settle-in {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-settle {
+  animation: settle-in 900ms var(--ease-umeed) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

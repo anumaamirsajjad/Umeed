@@ -1,5 +1,4 @@
-import type { UserPreferences } from '../types/index.js';
-import type { DetectedLanguage } from '../services/sessionService.js';
+import type { UserPreferences, DetectedLanguage } from '../types/index.js';
 
 /**
  * CRITICAL SAFETY FILE

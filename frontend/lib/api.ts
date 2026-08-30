@@ -1,7 +1,11 @@
 import axios, { AxiosInstance } from 'axios';
+import { clearStoredAuth, getStoredAuth } from './authStorage';
+import { ROUTES } from './constants';
 import type {
   ChatRequest,
   ChatResponse,
+  ChatMessage,
+  Conversation,
   UserPreferences,
   OnboardingResponse,
   SafetyPlan,
@@ -22,12 +26,37 @@ const client: AxiosInstance = axios.create({
 
 // Add auth token to every request
 client.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+  const { token } = getStoredAuth();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// A 401 on any protected endpoint means the session is gone (expired token,
+// cleared storage, forged/invalid token) — clear local auth state and send
+// the user to /login instead of leaving them on a page that looks logged in
+// but silently fails every action. Login/signup's own 401s (wrong password)
+// are excluded — those pages already show that error inline and must not be
+// redirected away from themselves.
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const url: string = error.config?.url || '';
+    const isAuthOwn401 = url === '/auth/login' || url === '/auth/signup';
+    if (
+      typeof window !== 'undefined' &&
+      error.response?.status === 401 &&
+      !isAuthOwn401
+    ) {
+      clearStoredAuth();
+      if (window.location.pathname !== ROUTES.login) {
+        window.location.href = ROUTES.login;
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Health check
 export const health = async (): Promise<{ status: string }> => {
@@ -41,8 +70,29 @@ export const sendMessage = async (req: Omit<ChatRequest, 'userId'>): Promise<Cha
   return data;
 };
 
-export const startNewChat = async (): Promise<void> => {
-  await client.post('/chat/new', {});
+// Conversation endpoints
+export const listConversations = async (): Promise<Conversation[]> => {
+  const { data } = await client.get('/conversations');
+  return data;
+};
+
+export const getConversation = async (
+  id: string
+): Promise<{ conversation: Conversation; messages: ChatMessage[] }> => {
+  const { data } = await client.get(`/conversations/${id}`);
+  return data;
+};
+
+export const renameConversation = async (
+  id: string,
+  title: string
+): Promise<Conversation> => {
+  const { data } = await client.patch(`/conversations/${id}`, { title });
+  return data;
+};
+
+export const deleteConversation = async (id: string): Promise<void> => {
+  await client.delete(`/conversations/${id}`);
 };
 
 // Onboarding endpoints
@@ -83,8 +133,11 @@ export const getSafetyPlan = async (): Promise<SafetyPlan | null> => {
     const { data } = await client.get('/safety-plan');
     return data;
   } catch (error) {
-    // 404 = no plan yet
-    return null;
+    // Only a 404 means "no plan yet". Every other failure (offline, 500) must
+    // propagate: swallowing them rendered a network error as the empty state,
+    // telling a user with a saved plan that they had never made one.
+    if (axios.isAxiosError(error) && error.response?.status === 404) return null;
+    throw error;
   }
 };
 
@@ -124,7 +177,6 @@ export const getResources = async (filters?: {
   country?: string;
   city?: string;
   type?: string;
-  userId?: string;
 }): Promise<ResourcesResponse> => {
   const { data } = await client.get('/resources', { params: filters });
   return data;

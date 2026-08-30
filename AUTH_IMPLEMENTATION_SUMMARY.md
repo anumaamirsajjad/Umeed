@@ -37,7 +37,7 @@ Successfully implemented a complete user authentication system for the Umeed men
 #### 5. Protected Routes
 Updated all user-specific endpoints to require authentication:
 - `POST /chat` → requires token
-- `POST /chat/new` → requires token
+- `GET /conversations`, `GET /conversations/:id`, `PATCH /conversations/:id`, `DELETE /conversations/:id` → require token
 - `POST /onboarding/preferences` → requires token
 - `GET /onboarding/preferences` → requires token
 - `POST /safety-plan` → requires token
@@ -89,7 +89,7 @@ Modified all controllers to extract userId from authenticated token instead of r
 - Updated API function signatures to remove `userId` parameters (comes from token)
 - Affected functions:
   - `sendMessage()`
-  - `startNewChat()`
+  - `listConversations()`, `getConversation()`, `renameConversation()`, `deleteConversation()`
   - `savePreferences()`
   - `getPreferences()`
   - `saveSafetyPlan()`
@@ -174,7 +174,6 @@ See `TESTING_GUIDE.md` for comprehensive testing procedures:
 3. **No rate limiting** → add to prevent brute force
 4. **7-day token expiry** → users must re-login
 5. **No refresh tokens** → consider adding for better UX
-6. **Chat history not persisted** → currently in-memory only
 
 ## Next Steps for Production
 
@@ -182,12 +181,11 @@ See `TESTING_GUIDE.md` for comprehensive testing procedures:
 2. Add password reset flow
 3. Add rate limiting on auth endpoints
 4. Implement refresh tokens
-5. Persist chat history to database
-6. Add admin dashboard
-7. GDPR compliance (data export/deletion)
-8. Move JWT_SECRET to secure config (not hardcoded)
-9. Use HTTPS in production
-10. Add audit logging
+5. Add admin dashboard
+6. GDPR compliance (data export/deletion)
+7. Move JWT_SECRET to secure config (not hardcoded)
+8. Use HTTPS in production
+9. Add audit logging
 
 ## Files Changed
 

@@ -3,10 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { savePreferences, checkOnboardingStatus } from '@/lib/api';
+import { useRequireAuth } from '@/lib/useRequireAuth';
+import { Button } from '@/components/ui/Button';
+import { Input, Select } from '@/components/ui/Input';
+import { Chip } from '@/components/ui/Chip';
+import { StepProgress } from '@/components/ui/StepProgress';
+import { HeaderBand } from './HeaderBand';
 import type { UserPreferences } from '@/lib/types';
 import {
   SUPPORT_STYLE_OPTIONS,
   TOPICS_OF_CONCERN,
+  COMMON_TOPICS_TO_AVOID,
   LANGUAGES,
   ROUTES,
 } from '@/lib/constants';
@@ -23,41 +30,48 @@ const STEP_NUMBER: Record<Step, number> = {
 };
 const TOTAL_STEPS = 4;
 
+function StepShell({
+  heading,
+  subtext,
+  children,
+}: {
+  heading: string;
+  subtext: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-[100dvh] animate-fade-up">
+      <HeaderBand heading={heading} subtext={subtext} />
+      <div className="max-w-lg mx-auto w-full px-6 pt-8 pb-16">{children}</div>
+    </div>
+  );
+}
+
 export default function Onboarding() {
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useRequireAuth({ requireOnboarded: false });
   const [step, setStep] = useState<Step>('redirect');
   const [loading, setLoading] = useState(false);
-  const [userId] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('userId');
-      if (stored) return stored;
-      const newId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('userId', newId);
-      return newId;
-    }
-    return '';
-  });
+  const [saveError, setSaveError] = useState('');
 
-  // Check if user has already completed onboarding
   useEffect(() => {
+    if (isLoading || !isAuthenticated) return;
+
     const checkStatus = async () => {
       try {
         const status = await checkOnboardingStatus();
         if (status.completed) {
-          // User has completed onboarding, skip to chat
-          router.push(ROUTES.chat);
+          router.push(ROUTES.dashboard);
         } else {
-          // User hasn't completed onboarding, show the first step
           setStep('name');
         }
       } catch (err) {
-        // If API fails, start onboarding (could be first-time user)
         setStep('name');
       }
     };
 
     checkStatus();
-  }, [router]);
+  }, [isAuthenticated, isLoading, router]);
 
   const [preferences, setPreferences] = useState<Partial<UserPreferences>>({
     name: '',
@@ -69,10 +83,14 @@ export default function Onboarding() {
 
   const handleTopicToggle = (topic: string) => {
     const current = preferences.topicsOfConcern || [];
-    const updated = current.includes(topic)
-      ? current.filter((t) => t !== topic)
-      : [...current, topic];
+    const updated = current.includes(topic) ? current.filter((t) => t !== topic) : [...current, topic];
     setPreferences({ ...preferences, topicsOfConcern: updated });
+  };
+
+  const handleAvoidTopicToggle = (topic: string) => {
+    const current = preferences.topicsToAvoid || [];
+    const updated = current.includes(topic) ? current.filter((t) => t !== topic) : [...current, topic];
+    setPreferences({ ...preferences, topicsToAvoid: updated });
   };
 
   const handleSupportStyleChange = (style: string) => {
@@ -86,556 +104,188 @@ export default function Onboarding() {
 
   const handleComplete = async () => {
     setLoading(true);
+    setSaveError('');
     try {
       await savePreferences(preferences);
       setStep('complete');
       setTimeout(() => {
-        router.push(ROUTES.chat);
+        router.push(ROUTES.dashboard);
       }, 2000);
     } catch (error) {
       console.error('Error saving preferences:', error);
-      alert('Error saving preferences. Please try again.');
+      // Was a native alert() — jarring in an app whose whole tone is gentle.
+      setSaveError("We couldn't save your preferences just now. Try again?");
     } finally {
       setLoading(false);
     }
   };
 
   const currentStep = STEP_NUMBER[step];
-  const progress = (currentStep / TOTAL_STEPS) * 100;
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--umeed-beige-50)',
-    }}>
-      {/* Loading/Redirect state */}
+    <div className="min-h-[100dvh] bg-surface-light dark:bg-surface-dark">
       {step === 'redirect' && (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <div style={{
-            textAlign: 'center',
-          }}>
-            <h1 style={{
-              fontSize: '44px',
-              fontFamily: "'Fraunces', Georgia, serif",
-              fontWeight: 700,
-              color: 'var(--umeed-ink-900)',
-              margin: '0 0 12px 0',
-            }}>
-              Welcome back
-            </h1>
-            <p style={{
-              fontSize: '18px',
-              color: 'var(--umeed-ink-500)',
-              margin: 0,
-            }}>
-              Loading your preferences...
-            </p>
+        <div className="min-h-[100dvh] flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="font-display text-4xl font-bold text-ink-light dark:text-ink-dark mb-3">Welcome back</h1>
+            <p className="text-lg text-ink-muted">Loading your preferences...</p>
           </div>
         </div>
       )}
 
-      {/* Progress bar */}
       {step !== 'complete' && step !== 'redirect' && (
-        <div style={{
-          height: '4px',
-          backgroundColor: 'var(--umeed-orange-100)',
-          position: 'sticky',
-          top: 0,
-        }}>
-          <div style={{
-            height: '100%',
-            backgroundColor: 'var(--umeed-orange-500)',
-            width: `${progress}%`,
-            transition: 'width 400ms cubic-bezier(0.22, 1, 0.36, 1)',
-          }} />
+        <div className="sticky top-0 z-10 bg-surface-light/90 dark:bg-surface-dark/90 backdrop-blur py-4">
+          <StepProgress step={currentStep} total={TOTAL_STEPS} />
         </div>
       )}
 
       {step === 'name' && (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          paddingLeft: '20px',
-          paddingRight: '20px',
-        }}>
-          <div style={{
-            maxWidth: '500px',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            width: '100%',
-          }}>
-            <h1 style={{
-              fontSize: '44px',
-              fontFamily: "'Fraunces', Georgia, serif",
-              fontWeight: 700,
-              color: 'var(--umeed-ink-900)',
-              margin: '0 0 12px 0',
-            }}>
-              Hello, I'm Umeed.
-            </h1>
-            <p style={{
-              fontSize: '18px',
-              color: 'var(--umeed-ink-500)',
-              marginBottom: '48px',
-              lineHeight: 1.6,
-            }}>
-              Your companion for the days that feel heavy — and the lighter ones too.
-            </p>
-
-            <div style={{ marginBottom: '32px' }}>
-              <label htmlFor="name-input" style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'var(--umeed-ink-900)',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                What should I call you?
-              </label>
-              <input
-                id="name-input"
-                type="text"
-                placeholder="Your name or nickname"
-                value={preferences.name || ''}
-                onChange={(e) => setPreferences({ ...preferences, name: e.target.value })}
-                maxLength={50}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '9999px',
-                  border: `1px solid var(--umeed-orange-100)`,
-                  backgroundColor: 'white',
-                  color: 'var(--umeed-ink-900)',
-                  fontSize: '16px',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  outline: 'none',
-                  transition: 'all 300ms',
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--umeed-orange-100)';
-                }}
-              />
-            </div>
-
-            <button
-              onClick={() => setStep('topics')}
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                borderRadius: '9999px',
-                backgroundColor: 'var(--umeed-orange-500)',
-                color: 'white',
-                border: 'none',
-                fontWeight: 700,
-                fontSize: '16px',
-                cursor: 'pointer',
-                transition: 'all 300ms',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-700)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-500)';
-              }}
-            >
-              Let's start
-            </button>
+        <StepShell
+          heading="Hello, I'm Umeed."
+          subtext="Your companion for the days that feel heavy — and the lighter ones too."
+        >
+          <div className="mb-8">
+            <Input
+              label="What should I call you?"
+              placeholder="Your name or nickname"
+              value={preferences.name || ''}
+              onChange={(e) => setPreferences({ ...preferences, name: e.target.value })}
+              maxLength={50}
+            />
           </div>
-        </div>
+
+          <Button size="lg" className="w-full rounded-pill" onClick={() => setStep('topics')}>
+            Let&apos;s start
+          </Button>
+        </StepShell>
       )}
 
       {step === 'topics' && (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          paddingLeft: '20px',
-          paddingRight: '20px',
-        }}>
-          <div style={{
-            maxWidth: '500px',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            width: '100%',
-          }}>
-            <h1 style={{
-              fontSize: '44px',
-              fontFamily: "'Fraunces', Georgia, serif",
-              fontWeight: 700,
-              color: 'var(--umeed-ink-900)',
-              margin: '0 0 12px 0',
-            }}>
-              What's on your mind?
-            </h1>
-            <p style={{
-              fontSize: '18px',
-              color: 'var(--umeed-ink-500)',
-              marginBottom: '48px',
-              lineHeight: 1.6,
-            }}>
-              Pick whatever feels true right now. You can always change this.
-            </p>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '12px',
-              marginBottom: '32px',
-            }} role="group" aria-label="What's on your mind">
-              {TOPICS_OF_CONCERN.map((topic) => {
-                const selected = preferences.topicsOfConcern?.includes(topic) || false;
-                return (
-                  <button
-                    key={topic}
-                    onClick={() => handleTopicToggle(topic)}
-                    style={{
-                      padding: '16px 12px',
-                      borderRadius: '8px',
-                      border: selected ? 'none' : `1px solid var(--umeed-orange-100)`,
-                      backgroundColor: selected ? 'var(--umeed-orange-500)' : 'white',
-                      color: selected ? 'white' : 'var(--umeed-ink-900)',
-                      fontWeight: 700,
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                      transition: 'all 300ms',
-                      textAlign: 'center',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!selected) {
-                        e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!selected) {
-                        e.currentTarget.style.backgroundColor = 'white';
-                      }
-                    }}
-                  >
-                    {topic}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={() => setStep('support-style')}
-              disabled={(preferences.topicsOfConcern?.length || 0) === 0}
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                borderRadius: '9999px',
-                backgroundColor: 'var(--umeed-orange-500)',
-                color: 'white',
-                border: 'none',
-                fontWeight: 700,
-                fontSize: '16px',
-                cursor: 'pointer',
-                transition: 'all 300ms',
-                opacity: (preferences.topicsOfConcern?.length || 0) === 0 ? 0.5 : 1,
-              }}
-              onMouseEnter={(e) => {
-                if ((preferences.topicsOfConcern?.length || 0) > 0) {
-                  e.currentTarget.style.backgroundColor = 'var(--umeed-orange-700)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-500)';
-              }}
-            >
-              Continue
-            </button>
+        <StepShell heading="What's on your mind?" subtext="Pick whatever feels true right now. You can always change this.">
+          <div className="flex flex-wrap gap-2 mb-10" role="group" aria-label="What's on your mind">
+            {TOPICS_OF_CONCERN.map((topic) => (
+              <Chip key={topic} selected={preferences.topicsOfConcern?.includes(topic) || false} onClick={() => handleTopicToggle(topic)}>
+                {topic}
+              </Chip>
+            ))}
           </div>
-        </div>
+
+          <h2 className="font-display text-xl font-bold text-ink-light dark:text-ink-dark mb-1">
+            Anything you&apos;d rather I steer away from?
+          </h2>
+          <p className="text-sm text-ink-muted mb-4 leading-relaxed">
+            Optional. I&apos;ll acknowledge these if they come up but won&apos;t push deeper.
+          </p>
+
+          <div className="flex flex-wrap gap-2 mb-8" role="group" aria-label="Topics to avoid">
+            {COMMON_TOPICS_TO_AVOID.map((topic) => (
+              <Chip key={topic} selected={preferences.topicsToAvoid?.includes(topic) || false} onClick={() => handleAvoidTopicToggle(topic)}>
+                {topic}
+              </Chip>
+            ))}
+          </div>
+
+          <div className="mb-8">
+            <label
+              htmlFor="cultural-context-input"
+              className="block text-sm font-semibold text-ink-light dark:text-ink-dark mb-2"
+            >
+              Anything about your background or culture you&apos;d like me to keep in mind? Optional.
+            </label>
+            <textarea
+              id="cultural-context-input"
+              placeholder="Share as much or as little as you'd like"
+              value={preferences.culturalContext || ''}
+              onChange={(e) => setPreferences({ ...preferences, culturalContext: e.target.value })}
+              rows={3}
+              maxLength={500}
+              className="w-full rounded-2xl border border-primary-200 dark:border-primary-900/50 bg-surface dark:bg-surface-dark px-4 py-3 text-base text-ink-light dark:text-ink-dark outline-none transition-colors duration-quick ease-umeed focus:border-primary-500 resize-vertical"
+            />
+          </div>
+
+          <Button
+            size="lg"
+            className="w-full rounded-pill"
+            disabled={(preferences.topicsOfConcern?.length || 0) === 0}
+            onClick={() => setStep('support-style')}
+          >
+            Continue
+          </Button>
+        </StepShell>
       )}
 
       {step === 'support-style' && (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          paddingLeft: '20px',
-          paddingRight: '20px',
-        }}>
-          <div style={{
-            maxWidth: '500px',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            width: '100%',
-          }}>
-            <h1 style={{
-              fontSize: '44px',
-              fontFamily: "'Fraunces', Georgia, serif",
-              fontWeight: 700,
-              color: 'var(--umeed-ink-900)',
-              margin: '0 0 12px 0',
-            }}>
-              How do you prefer support?
-            </h1>
-
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              marginTop: '32px',
-              marginBottom: '32px',
-            }} role="radiogroup" aria-label="Preferred support style">
-              {SUPPORT_STYLE_OPTIONS.map((option) => {
-                const checked = preferences.preferredSupportStyle === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => handleSupportStyleChange(option.value)}
-                    style={{
-                      textAlign: 'left',
-                      padding: '16px',
-                      borderRadius: '8px',
-                      border: checked ? 'none' : `1px solid var(--umeed-orange-100)`,
-                      backgroundColor: checked ? 'var(--umeed-orange-100)' : 'white',
-                      color: 'var(--umeed-ink-900)',
-                      transition: 'all 300ms',
-                      cursor: 'pointer',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!checked) {
-                        e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!checked) {
-                        e.currentTarget.style.backgroundColor = 'white';
-                      }
-                    }}
-                  >
-                    <div style={{
-                      fontWeight: 700,
-                      fontSize: '16px',
-                      marginBottom: '4px',
-                    }}>
-                      {option.label}
-                    </div>
-                    <div style={{
-                      fontSize: '14px',
-                      color: 'var(--umeed-ink-500)',
-                    }}>
-                      {option.description}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={() => setStep('topics')}
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                borderRadius: '9999px',
-                backgroundColor: 'white',
-                color: 'var(--umeed-ink-900)',
-                border: `1px solid var(--umeed-orange-100)`,
-                fontWeight: 700,
-                fontSize: '16px',
-                cursor: 'pointer',
-                transition: 'all 300ms',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-              }}
-            >
-              Back
-            </button>
+        <StepShell heading="How do you prefer support?" subtext="Choose whichever fits best — you can change this later.">
+          <div className="flex flex-col gap-3 mb-8 mt-2" role="radiogroup" aria-label="Preferred support style">
+            {SUPPORT_STYLE_OPTIONS.map((option) => {
+              const checked = preferences.preferredSupportStyle === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={checked}
+                  onClick={() => handleSupportStyleChange(option.value)}
+                  className={`text-left rounded-2xl p-4 transition-colors duration-quick ease-umeed ${
+                    checked
+                      ? 'bg-primary-100 dark:bg-primary-900/40'
+                      : 'border border-primary-100 dark:border-primary-900/40 bg-surface dark:bg-surface-dark hover:bg-primary-50 dark:hover:bg-primary-900/20'
+                  }`}
+                >
+                  <div className="font-semibold text-base text-ink-light dark:text-ink-dark mb-1">{option.label}</div>
+                  <div className="text-sm text-ink-muted">{option.description}</div>
+                </button>
+              );
+            })}
           </div>
-        </div>
+
+          <Button variant="ghost" size="lg" className="w-full rounded-pill" onClick={() => setStep('topics')}>
+            Back
+          </Button>
+        </StepShell>
       )}
 
       {step === 'languages' && (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          paddingLeft: '20px',
-          paddingRight: '20px',
-        }}>
-          <div style={{
-            maxWidth: '500px',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            width: '100%',
-          }}>
-            <h1 style={{
-              fontSize: '44px',
-              fontFamily: "'Fraunces', Georgia, serif",
-              fontWeight: 700,
-              color: 'var(--umeed-ink-900)',
-              margin: '0 0 12px 0',
-            }}>
-              Preferred language
-            </h1>
-            <p style={{
-              fontSize: '16px',
-              color: 'var(--umeed-ink-500)',
-              marginBottom: '32px',
-            }}>
-              Select the language you'd like us to use when possible.
-            </p>
-
-            <div style={{ marginBottom: '32px' }}>
-              <label htmlFor="language-select" style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'var(--umeed-ink-900)',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                Language
-              </label>
-              <select
-                id="language-select"
-                value={preferences.languages?.[0] || 'en'}
-                onChange={(e) => handleLanguageChange(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  border: `1px solid var(--umeed-orange-100)`,
-                  backgroundColor: 'white',
-                  color: 'var(--umeed-ink-900)',
-                  fontSize: '16px',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  outline: 'none',
-                  transition: 'all 300ms',
-                  cursor: 'pointer',
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--umeed-orange-100)';
-                }}
-              >
-                {LANGUAGES.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              gap: '12px',
-            }}>
-              <button
-                onClick={() => setStep('support-style')}
-                style={{
-                  flex: 1,
-                  padding: '14px 24px',
-                  borderRadius: '9999px',
-                  backgroundColor: 'white',
-                  color: 'var(--umeed-ink-900)',
-                  border: `1px solid var(--umeed-orange-100)`,
-                  fontWeight: 700,
-                  fontSize: '16px',
-                  cursor: 'pointer',
-                  transition: 'all 300ms',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'white';
-                }}
-              >
-                Back
-              </button>
-              <button
-                onClick={handleComplete}
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  padding: '14px 24px',
-                  borderRadius: '9999px',
-                  backgroundColor: 'var(--umeed-orange-500)',
-                  color: 'white',
-                  border: 'none',
-                  fontWeight: 700,
-                  fontSize: '16px',
-                  cursor: 'pointer',
-                  transition: 'all 300ms',
-                  opacity: loading ? 0.7 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.backgroundColor = 'var(--umeed-orange-700)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--umeed-orange-500)';
-                }}
-              >
-                {loading ? 'Saving...' : 'Complete'}
-              </button>
-            </div>
+        <StepShell heading="Preferred language" subtext="Select the language you'd like us to use when possible.">
+          <div className="mb-8">
+            <Select
+              label="Language"
+              value={preferences.languages?.[0] || 'en'}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+            >
+              {LANGUAGES.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name}
+                </option>
+              ))}
+            </Select>
           </div>
-        </div>
+
+          {saveError && (
+            <p role="alert" className="mb-4 rounded-lg bg-crisis-50 dark:bg-crisis-900/30 px-4 py-3 text-sm text-crisis-700 dark:text-crisis-300">
+              {saveError}
+            </p>
+          )}
+
+          <div className="flex gap-3">
+            <Button variant="ghost" size="lg" className="flex-1 rounded-pill" onClick={() => setStep('support-style')}>
+              Back
+            </Button>
+            <Button size="lg" className="flex-1 rounded-pill" loading={loading} onClick={handleComplete}>
+              {loading ? 'Saving…' : 'Complete'}
+            </Button>
+          </div>
+        </StepShell>
       )}
 
       {step === 'complete' && (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingLeft: '20px',
-          paddingRight: '20px',
-        }}>
-          <div style={{
-            textAlign: 'center',
-          }}>
-            <h1 style={{
-              fontSize: '44px',
-              fontFamily: "'Fraunces', Georgia, serif",
-              fontWeight: 700,
-              color: 'var(--umeed-ink-900)',
-              margin: '0 0 12px 0',
-            }}>
-              All set!
-            </h1>
-            <p style={{
-              fontSize: '18px',
-              color: 'var(--umeed-ink-500)',
-              margin: '0 0 16px 0',
-              lineHeight: 1.6,
-            }}>
-              Your preferences have been saved. Let's get started.
+        <div className="min-h-[100dvh] flex items-center justify-center px-5">
+          <div className="text-center animate-fade-up">
+            <h1 className="font-display text-4xl font-bold text-ink-light dark:text-ink-dark mb-3">All set!</h1>
+            <p className="text-lg text-ink-muted mb-2 leading-relaxed">
+              Your preferences have been saved. Let&apos;s get started.
             </p>
-            <p style={{
-              fontSize: '14px',
-              color: 'var(--umeed-ink-500)',
-              margin: 0,
-            }}>
-              Redirecting to chat...
-            </p>
+            <p className="text-sm text-ink-muted" role="status">Taking you to your dashboard…</p>
           </div>
         </div>
       )}

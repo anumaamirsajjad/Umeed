@@ -8,64 +8,65 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        umeed: {
-          'orange-500': '#F46B1F',
-          'orange-700': '#C4491A',
-          'orange-100': '#FDE3CE',
-          'beige-50': '#FBF3E7',
-          'beige-200': '#F2E4D0',
-          'ink-900': '#3A2A1C',
-          'ink-500': '#8C765F',
-          'green-600': '#3F7D4E',
-          'crisis-600': '#C0392B',
-        },
-        // Dark mode overrides
-        'umeed-dark': {
-          'beige-50': '#241811',
-          'beige-200': '#342418',
-          'ink-900': '#F5F0EA',
-          'ink-500': '#C4B3A0',
-          'orange-500': '#FF8A42',
-          'orange-700': '#FFAA5F',
-        },
-
-        // Generic design-system aliases used across components/newer pages
-        // (Button, Card, Input, mood/resources/safety-plan screens). Derived
-        // from the umeed brand palette above so both naming schemes stay in sync.
+        // Muted sage — the calm, primary voice. Unchanged: it was already
+        // right, and every page is already wired to it.
         primary: {
-          50: '#FEF3EA',
-          100: '#FDE3CE',
-          200: '#FBC9A0',
-          300: '#F7A66C',
-          400: '#F58A45',
-          500: '#F46B1F',
-          600: '#DD5A15',
-          700: '#C4491A',
-          800: '#9C3814',
-          900: '#7A2C10',
+          50: '#F2F6F2',
+          100: '#E2EBE3',
+          200: '#C9DACB',
+          300: '#ACC2AE',
+          400: '#93AC97',
+          500: '#7C9885',
+          600: '#6C8874',
+          700: '#56705F',
+          800: '#42574B',
+          900: '#2F3F37',
         },
+        // Warm clay, replacing the cool dusty blue that used to sit here. The
+        // blue was the one thing fighting the earthy direction — swapping the
+        // values (not the token name) re-tunes every `accent-*` usage already
+        // in the pages without touching a single line of markup.
         accent: {
-          50: '#EEF6F0',
-          100: '#D7EBDC',
-          200: '#B0D6BA',
-          300: '#85BE93',
-          400: '#5FA271',
-          500: '#4C8F5E',
-          600: '#3F7D4E',
-          700: '#336640',
-          800: '#295233',
-          900: '#1F3D26',
+          50: '#FAF6F1',
+          100: '#F2E9DF',
+          200: '#E5D5C3',
+          300: '#D4BCA3',
+          400: '#C2A184',
+          500: '#B08968',
+          600: '#97724F',
+          700: '#7A5C41',
+          800: '#5C4633',
+          900: '#3F3125',
         },
         ink: {
-          light: '#3A2A1C',
-          dark: '#F5F0EA',
-          muted: '#8C765F',
+          light: '#3D3A33',  // warm brown-grey, never pure black
+          dark: '#EDEBE7',
+          muted: 'var(--umeed-ink-500)',
+          // Text that sits on a filled primary/accent surface and must stay
+          // dark regardless of which elevation token the surface uses.
+          inverse: '#1F1D1A',
+        },
+        // Crisis red — deliberately outside the calm sage/clay system so it
+        // stays universally recognizable as urgent. 600/700 are Safety Mode;
+        // 50/200/300 exist so form validation can use this scale instead of
+        // raw Tailwind reds.
+        crisis: {
+          DEFAULT: '#C0392B',
+          50: '#FBF0EE',
+          200: '#F0CFC9',
+          300: '#E3A9A0',
+          600: '#C0392B',
+          700: '#A6301F',
+          900: '#4A1811',
         },
         surface: {
-          DEFAULT: '#FFFFFF',
-          light: '#FBF3E7',
-          dark: '#241811',
-          darker: '#17110C',
+          DEFAULT: '#FFFDFA',   // tinted off-white, not #FFF
+          light: '#F7F4EF',     // page canvas, light
+          dark: '#1F1D1A',      // page canvas, dark — warm, was cool #23262B
+          // Elevated surface in dark mode (cards, bubbles, modals). Deliberately
+          // LIGHTER than `dark`: dark-mode elevation lifts a surface off the
+          // page, it doesn't sink it below.
+          darker: '#2A2724',
         },
       },
       fontFamily: {
@@ -73,19 +74,32 @@ module.exports = {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         nastaliq: ['var(--font-nastaliq)', 'serif'],
       },
+      // Fluid scale. Body and caption stay fixed — fluid body text hurts
+      // readability; only display sizes need to scale with the viewport.
       fontSize: {
-        caption: ['13px', { lineHeight: '1.5' }],
-        body: ['16px', { lineHeight: '1.5' }],
-        lead: ['20px', { lineHeight: '1.5' }],
-        section: ['28px', { lineHeight: '1.2' }],
-        heading: ['44px', { lineHeight: '1.2' }],
-        hero: ['64px', { lineHeight: '1.2' }],
+        caption: ['0.8125rem', { lineHeight: '1.5' }],
+        body: ['1rem', { lineHeight: '1.6' }],
+        lead: ['clamp(1.0625rem, 1rem + 0.35vw, 1.25rem)', { lineHeight: '1.55' }],
+        section: ['clamp(1.25rem, 1.1rem + 0.75vw, 1.75rem)', { lineHeight: '1.25' }],
+        heading: ['clamp(1.6rem, 1.25rem + 1.75vw, 2.75rem)', { lineHeight: '1.15' }],
+        hero: ['clamp(2rem, 1.4rem + 3vw, 4rem)', { lineHeight: '1.08', letterSpacing: '-0.02em' }],
       },
       borderRadius: {
         lg: '0.5rem',
         '2xl': '1rem',
         card: '1.25rem',
         pill: '9999px',
+      },
+      // Warm-tinted and diffuse. Overriding the default keys means every
+      // existing `shadow-sm` / `shadow-md` in the app softens automatically,
+      // with no markup churn.
+      boxShadow: {
+        sm: '0 1px 2px 0 rgb(61 58 51 / 0.04)',
+        DEFAULT: '0 2px 8px -2px rgb(61 58 51 / 0.06)',
+        md: '0 6px 20px -6px rgb(61 58 51 / 0.10)',
+        lg: '0 16px 40px -12px rgb(61 58 51 / 0.12)',
+        glass: '0 8px 32px -10px rgb(61 58 51 / 0.18)',
+        none: 'none',
       },
       transitionDuration: {
         micro: '150ms',

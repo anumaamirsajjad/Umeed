@@ -8,6 +8,11 @@ import {
   getSafetyPlanSuggestions,
 } from '@/lib/api';
 import { ROUTES } from '@/lib/constants';
+import { useRequireAuth } from '@/lib/useRequireAuth';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { StepProgress } from '@/components/ui/StepProgress';
+import { Icon } from '@/components/ui/Icon';
 import type { SafetyPlan, TrustedContact } from '@/lib/types';
 
 const EMPTY_PLAN: SafetyPlan = {
@@ -25,7 +30,6 @@ type StepKey = 'warning' | 'coping' | 'contacts' | 'reasons' | 'environment';
 
 interface StepConfig {
   key: StepKey;
-  tabLabel: string;
   heading: string;
   subtext: string;
   placeholder?: string;
@@ -35,7 +39,6 @@ interface StepConfig {
 const STEPS: StepConfig[] = [
   {
     key: 'warning',
-    tabLabel: 'Warning signs',
     heading: 'What do you notice first when things start feeling heavy?',
     subtext: "Write as much or as little as you like. It's just for you.",
     placeholder: 'e.g., I stop replying to messages, I lose interest in eating, I go quiet...',
@@ -43,7 +46,6 @@ const STEPS: StepConfig[] = [
   },
   {
     key: 'coping',
-    tabLabel: 'Coping strategies',
     heading: "What actually helps you when you're struggling?",
     subtext: "Write as much or as little as you like. It's just for you.",
     placeholder: 'e.g., A slow walk, calling my sister, making chai and sitting outside...',
@@ -51,13 +53,11 @@ const STEPS: StepConfig[] = [
   },
   {
     key: 'contacts',
-    tabLabel: 'People in your corner',
     heading: 'Who can you reach out to?',
     subtext: 'People you trust to be there for you, even just to sit with you.',
   },
   {
     key: 'reasons',
-    tabLabel: 'What keeps you going',
     heading: 'What keeps you going, even on hard days?',
     subtext: "Write as much or as little as you like. It's just for you.",
     placeholder: "e.g., My family needs me, finishing what I've started, my faith...",
@@ -65,7 +65,6 @@ const STEPS: StepConfig[] = [
   },
   {
     key: 'environment',
-    tabLabel: 'Making space safer',
     heading: "Is there anything you'd want to put out of reach on a hard day?",
     subtext: "Write as much or as little as you like. It's just for you.",
     placeholder: 'e.g., Staying off social media after 10pm, keeping my keys with [trusted contact]...',
@@ -79,7 +78,7 @@ function linesToArray(text: string): string[] {
 
 export default function SafetyPlanBuilder() {
   const router = useRouter();
-  const [userId] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('userId') || '' : ''));
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
   const [plan, setPlan] = useState<SafetyPlan>(EMPTY_PLAN);
   const [contactDraft, setContactDraft] = useState<TrustedContact>(EMPTY_CONTACT);
   const [stepIndex, setStepIndex] = useState(0);
@@ -87,22 +86,28 @@ export default function SafetyPlanBuilder() {
   const [saving, setSaving] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  // Errors and "nothing to suggest yet" notes shared one style, so a failed
+  // save looked exactly like a helpful tip.
+  const [statusIsError, setStatusIsError] = useState(false);
 
   const step = STEPS[stepIndex];
   const isLastStep = stepIndex === STEPS.length - 1;
 
   useEffect(() => {
-    if (!userId) {
-      if (typeof window !== 'undefined') window.location.href = ROUTES.onboarding;
-      return;
-    }
+    if (authLoading || !isAuthenticated) return;
 
     getSafetyPlan()
       .then((existing) => {
         if (existing) setPlan({ ...EMPTY_PLAN, ...existing });
       })
+      .catch(() => {
+        // Starting from a blank plan would silently overwrite a saved one on
+        // the first "Next", so say what happened instead.
+        setStatusMessage("We couldn't load your saved plan. Reload before editing so nothing gets overwritten.");
+        setStatusIsError(true);
+      })
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [authLoading, isAuthenticated]);
 
   const persist = useCallback(
     async (planToSave: SafetyPlan) => {
@@ -120,15 +125,21 @@ export default function SafetyPlanBuilder() {
       } catch (error) {
         console.error('Error saving safety plan:', error);
         setStatusMessage('Something went wrong saving your plan. Please try again.');
+        setStatusIsError(true);
         return null;
       }
     },
-    [userId]
+    []
   );
 
+  // Stay on the current step when the save fails. Advancing regardless meant a
+  // network blip discarded whatever the user had just written, with only a
+  // status line they had already scrolled past.
   const goToStep = async (index: number) => {
     setStatusMessage(null);
-    await persist(plan);
+    setStatusIsError(false);
+    const saved = await persist(plan);
+    if (!saved) return;
     setStepIndex(index);
   };
 
@@ -145,6 +156,7 @@ export default function SafetyPlanBuilder() {
   const handleFinish = async () => {
     setSaving(true);
     setStatusMessage(null);
+    setStatusIsError(false);
     const saved = await persist(plan);
     setSaving(false);
     if (saved) router.push(ROUTES.safetyPlanView);
@@ -153,6 +165,7 @@ export default function SafetyPlanBuilder() {
   const handleSuggest = async () => {
     setSuggesting(true);
     setStatusMessage(null);
+    setStatusIsError(false);
     try {
       const suggestions = await getSafetyPlanSuggestions();
       const dedupe = (existing: string[], incoming: string[]) => Array.from(new Set([...existing, ...incoming]));
@@ -206,6 +219,7 @@ export default function SafetyPlanBuilder() {
     } catch (error) {
       console.error('Error loading suggestions:', error);
       setStatusMessage('Could not load suggestions right now.');
+      setStatusIsError(true);
     } finally {
       setSuggesting(false);
     }
@@ -213,131 +227,49 @@ export default function SafetyPlanBuilder() {
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'var(--umeed-beige-50)',
-      }}>
-        <p style={{ color: 'var(--umeed-ink-500)' }}>Loading your safety plan...</p>
+      <div className="min-h-[100dvh] flex items-center justify-center bg-surface-light dark:bg-surface-dark">
+        <p className="text-ink-muted" role="status">Loading your safety plan…</p>
       </div>
     );
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--umeed-beige-50)',
-      paddingLeft: '80px',
-      paddingTop: '40px',
-      paddingBottom: '60px',
-    }}>
-      {/* Header */}
-      <div style={{
-        maxWidth: '900px',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        paddingLeft: '40px',
-        paddingRight: '40px',
-        marginBottom: '40px',
-      }}>
-        <h1 style={{
-          fontSize: '44px',
-          fontFamily: "'Fraunces', Georgia, serif",
-          fontWeight: 700,
-          color: 'var(--umeed-ink-900)',
-          margin: '0 0 16px 0',
-        }}>
-          My Safety Plan
-        </h1>
-        <p style={{
-          fontSize: '16px',
-          color: 'var(--umeed-ink-500)',
-          margin: 0,
-        }}>
-          Step {stepIndex + 1} of {STEPS.length}
-        </p>
-        <div style={{
-          height: '4px',
-          backgroundColor: 'var(--umeed-orange-100)',
-          borderRadius: '2px',
-          marginTop: '12px',
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%',
-            backgroundColor: 'var(--umeed-orange-500)',
-            width: `${((stepIndex + 1) / STEPS.length) * 100}%`,
-            transition: 'width 400ms cubic-bezier(0.22, 1, 0.36, 1)',
-          }} />
-        </div>
+    <div className="min-h-[100dvh] bg-surface-light dark:bg-surface-dark pt-8 pb-16 px-5">
+      <div className="max-w-3xl mx-auto mb-10">
+        <h1 className="font-display text-heading font-bold text-ink-light dark:text-ink-dark mb-4">My Safety Plan</h1>
+        <StepProgress step={stepIndex + 1} total={STEPS.length} />
       </div>
 
-      {/* Notebook section */}
-      <div style={{
-        maxWidth: '900px',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        backgroundColor: 'white',
-        borderLeft: '12px solid var(--umeed-orange-500)',
-        paddingLeft: '40px',
-        paddingRight: '40px',
-        paddingTop: '40px',
-        paddingBottom: '40px',
-        position: 'relative',
-      }}>
-        {/* Spine lines */}
-        <div style={{
-          position: 'absolute',
-          left: '40px',
-          top: 0,
-          bottom: 0,
-          width: '2px',
-          backgroundImage: `repeating-linear-gradient(
-            to bottom,
-            var(--umeed-orange-100) 0,
-            var(--umeed-orange-100) 24px,
-            transparent 24px,
-            transparent 28px
-          )`,
-        }} />
+      {/* Notebook section: a solid spine + faint rule lines evoke a page in a
+          personal notebook, not a clinical form. */}
+      <div className="max-w-3xl mx-auto relative rounded-2xl bg-surface dark:bg-surface-darker border border-primary-100 dark:border-primary-900/40 shadow-sm pl-12 pr-8 py-10 md:pl-14">
+        <div
+          className="absolute left-10 top-0 bottom-0 w-0.5 md:left-12"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(to bottom, var(--umeed-orange-100) 0, var(--umeed-orange-100) 24px, transparent 24px, transparent 28px)',
+          }}
+        />
+        <div className="absolute left-0 top-0 bottom-0 w-3 rounded-l-2xl bg-primary-600" />
 
-        {/* Content */}
-        <div style={{ marginBottom: '32px' }}>
-          <h2 style={{
-            fontSize: '28px',
-            fontFamily: "'Fraunces', Georgia, serif",
-            fontWeight: 700,
-            color: 'var(--umeed-ink-900)',
-            margin: '0 0 8px 0',
-          }}>
-            {step.heading}
-          </h2>
-          <p style={{
-            fontSize: '16px',
-            color: 'var(--umeed-ink-500)',
-            margin: 0,
-          }}>
-            {step.subtext}
-          </p>
+        <div className="mb-8">
+          <h2 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark mb-2">{step.heading}</h2>
+          <p className="text-base text-ink-muted">{step.subtext}</p>
         </div>
 
         {statusMessage && (
-          <div style={{
-            padding: '12px 16px',
-            borderRadius: '4px',
-            backgroundColor: 'var(--umeed-orange-100)',
-            borderLeft: '4px solid var(--umeed-orange-500)',
-            color: 'var(--umeed-ink-900)',
-            fontSize: '14px',
-            marginBottom: '24px',
-          }}>
+          <div
+            role={statusIsError ? 'alert' : 'status'}
+            className={`px-4 py-3 rounded-lg text-sm mb-6 ${
+              statusIsError
+                ? 'bg-crisis-50 dark:bg-crisis-900/30 text-crisis-700 dark:text-crisis-300'
+                : 'bg-primary-50 dark:bg-primary-900/20 text-ink-light dark:text-ink-dark'
+            }`}
+          >
             {statusMessage}
           </div>
         )}
 
-        {/* Text input fields */}
         {step.field ? (
           <textarea
             aria-label={step.heading}
@@ -345,60 +277,23 @@ export default function SafetyPlanBuilder() {
             onChange={(e) => setPlan((prev) => ({ ...prev, [step.field as keyof SafetyPlan]: linesToArray(e.target.value) }))}
             placeholder={step.placeholder}
             rows={10}
-            style={{
-              width: '100%',
-              padding: '16px',
-              border: '2px dashed var(--umeed-orange-500)',
-              borderRadius: '4px',
-              backgroundColor: 'white',
-              color: 'var(--umeed-ink-900)',
-              fontSize: '16px',
-              fontFamily: 'Inter, system-ui, sans-serif',
-              lineHeight: 1.6,
-              transition: 'all 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-              outline: 'none',
-              resize: 'vertical',
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = 'var(--umeed-orange-700)';
-              e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
-              e.currentTarget.style.backgroundColor = 'white';
-            }}
+            className="w-full p-4 rounded-2xl border border-primary-200 dark:border-primary-900/50 bg-surface-light dark:bg-surface-dark text-ink-light dark:text-ink-dark text-base leading-relaxed outline-none transition-colors duration-quick ease-umeed focus:border-primary-500 resize-vertical"
           />
         ) : (
           <div>
-            {/* Contacts list */}
             {plan.trustedContacts.length > 0 && (
-              <div style={{ marginBottom: '24px' }}>
+              <div className="mb-6 space-y-3">
                 {plan.trustedContacts.map((contact, idx) => (
                   <div
                     key={idx}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      paddingBottom: '12px',
-                      marginBottom: '12px',
-                      borderBottom: '1px solid var(--umeed-orange-100)',
-                    }}
+                    className="flex justify-between items-center pb-3 border-b border-primary-100 dark:border-primary-900/40"
                   >
                     <div>
-                      <div style={{
-                        fontSize: '16px',
-                        fontWeight: 700,
-                        color: 'var(--umeed-ink-900)',
-                      }}>
+                      <div className="text-base font-bold text-ink-light dark:text-ink-dark">
                         {contact.name || 'Unnamed contact'}
                       </div>
                       {(contact.relationship || contact.phone) && (
-                        <div style={{
-                          fontSize: '14px',
-                          color: 'var(--umeed-ink-500)',
-                          marginTop: '4px',
-                        }}>
+                        <div className="text-sm text-ink-muted mt-1">
                           {contact.relationship && <span>{contact.relationship}</span>}
                           {contact.relationship && contact.phone && <span> · </span>}
                           {contact.phone && <span>{contact.phone}</span>}
@@ -409,317 +304,76 @@ export default function SafetyPlanBuilder() {
                       type="button"
                       onClick={() => handleRemoveContact(idx)}
                       aria-label={`Remove ${contact.name}`}
-                      style={{
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        fontSize: '24px',
-                        color: 'var(--umeed-ink-500)',
-                        cursor: 'pointer',
-                        fontWeight: 700,
-                        transition: 'color 300ms',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = 'var(--umeed-orange-500)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color = 'var(--umeed-ink-500)';
-                      }}
+                      className="text-ink-muted hover:text-crisis-600 transition-colors duration-quick ease-umeed"
                     >
-                      ×
+                      <Icon name="x" className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Add contact form */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '16px',
-              marginBottom: '16px',
-            }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: 'var(--umeed-ink-900)',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
-                  Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Ayesha"
-                  value={contactDraft.name}
-                  onChange={(e) => setContactDraft((prev) => ({ ...prev, name: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '2px dashed var(--umeed-orange-500)',
-                    borderRadius: '4px',
-                    backgroundColor: 'white',
-                    color: 'var(--umeed-ink-900)',
-                    fontSize: '14px',
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                    outline: 'none',
-                    transition: 'all 300ms',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--umeed-orange-700)';
-                    e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
-                    e.currentTarget.style.backgroundColor = 'white';
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: 'var(--umeed-ink-900)',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
-                  Relationship
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. sister, friend"
-                  value={contactDraft.relationship}
-                  onChange={(e) => setContactDraft((prev) => ({ ...prev, relationship: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '2px dashed var(--umeed-orange-500)',
-                    borderRadius: '4px',
-                    backgroundColor: 'white',
-                    color: 'var(--umeed-ink-900)',
-                    fontSize: '14px',
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                    outline: 'none',
-                    transition: 'all 300ms',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--umeed-orange-700)';
-                    e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
-                    e.currentTarget.style.backgroundColor = 'white';
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: 'var(--umeed-ink-900)',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
-                  Phone (optional)
-                </label>
-                <input
-                  type="tel"
-                  placeholder="e.g. 03xx-xxxxxxx"
-                  value={contactDraft.phone}
-                  onChange={(e) => setContactDraft((prev) => ({ ...prev, phone: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '2px dashed var(--umeed-orange-500)',
-                    borderRadius: '4px',
-                    backgroundColor: 'white',
-                    color: 'var(--umeed-ink-900)',
-                    fontSize: '14px',
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                    outline: 'none',
-                    transition: 'all 300ms',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--umeed-orange-700)';
-                    e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
-                    e.currentTarget.style.backgroundColor = 'white';
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: 'var(--umeed-ink-900)',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
-                  Email (optional)
-                </label>
-                <input
-                  type="email"
-                  placeholder="e.g. ayesha@example.com"
-                  value={contactDraft.email}
-                  onChange={(e) => setContactDraft((prev) => ({ ...prev, email: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '2px dashed var(--umeed-orange-500)',
-                    borderRadius: '4px',
-                    backgroundColor: 'white',
-                    color: 'var(--umeed-ink-900)',
-                    fontSize: '14px',
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                    outline: 'none',
-                    transition: 'all 300ms',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--umeed-orange-700)';
-                    e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--umeed-orange-500)';
-                    e.currentTarget.style.backgroundColor = 'white';
-                  }}
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <Input
+                label="Name"
+                placeholder="e.g. Ayesha"
+                value={contactDraft.name}
+                onChange={(e) => setContactDraft((prev) => ({ ...prev, name: e.target.value }))}
+              />
+              <Input
+                label="Relationship"
+                placeholder="e.g. sister, friend"
+                value={contactDraft.relationship}
+                onChange={(e) => setContactDraft((prev) => ({ ...prev, relationship: e.target.value }))}
+              />
+              <Input
+                label="Phone (optional)"
+                type="tel"
+                placeholder="e.g. 03xx-xxxxxxx"
+                value={contactDraft.phone}
+                onChange={(e) => setContactDraft((prev) => ({ ...prev, phone: e.target.value }))}
+              />
+              <Input
+                label="Email (optional)"
+                type="email"
+                placeholder="e.g. ayesha@example.com"
+                value={contactDraft.email}
+                onChange={(e) => setContactDraft((prev) => ({ ...prev, email: e.target.value }))}
+              />
             </div>
-            <button
-              type="button"
-              onClick={handleAddContact}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: 'white',
-                border: `1px solid var(--umeed-orange-500)`,
-                borderRadius: '4px',
-                color: 'var(--umeed-orange-500)',
-                fontWeight: 700,
-                fontSize: '14px',
-                cursor: 'pointer',
-                transition: 'all 300ms',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--umeed-orange-100)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-              }}
-            >
+            {/* Disabled rather than silently no-op'ing on an empty name. */}
+            <Button variant="ghost" disabled={!contactDraft.name.trim()} onClick={handleAddContact}>
+              <Icon name="people" className="icon-inline" />
               Add contact
-            </button>
+            </Button>
           </div>
         )}
 
-        {/* Suggest button */}
-        <div style={{ marginTop: '32px' }}>
-          <button
-            type="button"
+        <div className="mt-8">
+          <Button
+            variant="ghost"
+            loading={suggesting}
             onClick={handleSuggest}
-            disabled={suggesting}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: 'white',
-              border: `1px solid var(--umeed-green-600)`,
-              borderRadius: '4px',
-              color: 'var(--umeed-green-600)',
-              fontWeight: 700,
-              fontSize: '14px',
-              cursor: suggesting ? 'not-allowed' : 'pointer',
-              opacity: suggesting ? 0.6 : 1,
-              transition: 'all 300ms',
-            }}
-            onMouseEnter={(e) => {
-              if (!suggesting) {
-                e.currentTarget.style.backgroundColor = 'var(--umeed-green-600)';
-                e.currentTarget.style.color = 'white';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-              e.currentTarget.style.color = 'var(--umeed-green-600)';
-            }}
           >
+            <Icon name="sparkle" className="icon-inline" />
             {suggesting ? 'Getting suggestions...' : 'Suggest from our chats'}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Navigation buttons */}
-      <div style={{
-        maxWidth: '900px',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        marginTop: '40px',
-        paddingLeft: '40px',
-        paddingRight: '40px',
-        display: 'flex',
-        gap: '12px',
-      }}>
+      <div className="max-w-3xl mx-auto mt-8 flex gap-3">
         {stepIndex > 0 && (
-          <button
-            type="button"
-            onClick={() => goToStep(stepIndex - 1)}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: 'white',
-              border: `1px solid var(--umeed-ink-500)`,
-              borderRadius: '4px',
-              color: 'var(--umeed-ink-900)',
-              fontWeight: 700,
-              fontSize: '14px',
-              cursor: 'pointer',
-              transition: 'all 300ms',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--umeed-beige-200)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-            }}
-          >
+          <Button variant="ghost" onClick={() => goToStep(stepIndex - 1)}>
             Back
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
+        <Button
+          className="flex-1"
+          loading={saving}
           onClick={isLastStep ? handleFinish : () => goToStep(stepIndex + 1)}
-          disabled={saving}
-          style={{
-            flex: 1,
-            padding: '12px 24px',
-            backgroundColor: 'var(--umeed-orange-500)',
-            border: 'none',
-            borderRadius: '4px',
-            color: 'white',
-            fontWeight: 700,
-            fontSize: '14px',
-            cursor: saving ? 'not-allowed' : 'pointer',
-            opacity: saving ? 0.7 : 1,
-            transition: 'all 300ms',
-          }}
-          onMouseEnter={(e) => {
-            if (!saving) {
-              e.currentTarget.style.backgroundColor = 'var(--umeed-orange-700)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--umeed-orange-500)';
-          }}
         >
           {saving ? 'Saving...' : isLastStep ? 'See my plan' : 'Next'}
-        </button>
+        </Button>
       </div>
     </div>
   );

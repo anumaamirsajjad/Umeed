@@ -29,6 +29,14 @@ export interface ChatMessage {
   messageType?: 'pattern_insight';
 }
 
+// Persisted conversation (one thread in a user's chat history)
+export interface Conversation {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Safety Plan
 export interface SafetyPlan {
   id?: string;
@@ -91,6 +99,7 @@ export interface ChatRequest {
   userId: string;
   preferences?: UserPreferences;
   comfortMode?: ComfortMode;
+  conversationId?: string;
 }
 
 export interface ChatResponse {
@@ -100,6 +109,7 @@ export interface ChatResponse {
   crisisAlert?: CrisisAlert;
   suggestedResources?: CrisisResource[];
   messageType?: 'pattern_insight';
+  conversationId: string;
 }
 
 export interface OnboardingResponse {

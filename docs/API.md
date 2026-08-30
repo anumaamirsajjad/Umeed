@@ -34,10 +34,11 @@ Send a message to the chatbot and receive an empathetic response. If crisis lang
 ```json
 {
   "message": "I've been feeling really down lately",
-  "userId": "user-123",
+  "conversationId": "conv-789",
   "preferences": {
     "preferredSupportStyle": "family_community",
     "topicsToAvoid": ["medication"],
+    "topicsOfConcern": ["work stress"],
     "languages": ["en"]
   }
 }
@@ -45,16 +46,18 @@ Send a message to the chatbot and receive an empathetic response. If crisis lang
 
 **Parameters:**
 - `message` (string, required): User's message
-- `userId` (string, required): Unique user identifier
+- `conversationId` (string, optional): Conversation ID; omit to start a new conversation
 - `preferences` (object, optional): User preferences from onboarding
   - `preferredSupportStyle` (enum): "family_community" | "professional" | "solo" | "mixed"
   - `topicsToAvoid` (array): Topics the user prefers not to discuss
+  - `topicsOfConcern` (array, optional): What's currently on their mind, captured at onboarding
   - `languages` (array): Preferred languages (ISO 639-1 codes)
 
 **Response:**
 ```json
 {
   "id": "msg-456",
+  "conversationId": "conv-789",
   "message": "I hear you. That sounds really difficult...",
   "isCrisis": false,
   "crisisAlert": null,
@@ -66,6 +69,7 @@ Send a message to the chatbot and receive an empathetic response. If crisis lang
 ```json
 {
   "id": "msg-457",
+  "conversationId": "conv-789",
   "message": "I'm really concerned about what you're sharing...",
   "isCrisis": true,
   "crisisAlert": {
@@ -91,6 +95,126 @@ Send a message to the chatbot and receive an empathetic response. If crisis lang
 
 ---
 
+### Conversations
+
+**GET** `/conversations`
+
+List all conversations for the authenticated user, sorted by most recently updated first.
+
+**Response:**
+```json
+[
+  {
+    "id": "conv-789",
+    "userId": "user-123",
+    "title": "Work stress and coping",
+    "detectedLanguage": "english",
+    "createdAt": "2026-08-21T14:23:45Z",
+    "updatedAt": "2026-08-21T16:45:12Z"
+  },
+  ...
+]
+```
+
+**Status Codes:**
+- `200`: List retrieved successfully
+- `401`: Unauthorized (missing or invalid token)
+
+---
+
+**GET** `/conversations/:id`
+
+Retrieve a specific conversation and all its messages.
+
+**Response:**
+```json
+{
+  "conversation": {
+    "id": "conv-789",
+    "userId": "user-123",
+    "title": "Work stress and coping",
+    "detectedLanguage": "english",
+    "createdAt": "2026-08-21T14:23:45Z",
+    "updatedAt": "2026-08-21T16:45:12Z"
+  },
+  "messages": [
+    {
+      "id": "msg-456",
+      "conversationId": "conv-789",
+      "content": "I've been feeling really down lately",
+      "role": "user",
+      "createdAt": "2026-08-21T14:23:45Z"
+    },
+    {
+      "id": "msg-457",
+      "conversationId": "conv-789",
+      "content": "I hear you. That sounds really difficult...",
+      "role": "assistant",
+      "createdAt": "2026-08-21T14:24:10Z"
+    }
+  ]
+}
+```
+
+**Status Codes:**
+- `200`: Conversation retrieved successfully
+- `401`: Unauthorized (missing or invalid token)
+- `404`: Conversation not found or not owned by user
+
+---
+
+**PATCH** `/conversations/:id`
+
+Rename a conversation.
+
+**Request:**
+```json
+{
+  "title": "New conversation title"
+}
+```
+
+**Parameters:**
+- `title` (string, required): New conversation title (cannot be empty)
+
+**Response:**
+```json
+{
+  "id": "conv-789",
+  "userId": "user-123",
+  "title": "New conversation title",
+  "detectedLanguage": "english",
+  "createdAt": "2026-08-21T14:23:45Z",
+  "updatedAt": "2026-08-21T17:00:00Z"
+}
+```
+
+**Status Codes:**
+- `200`: Conversation updated successfully
+- `400`: Invalid request (missing or empty title)
+- `401`: Unauthorized (missing or invalid token)
+- `404`: Conversation not found or not owned by user
+
+---
+
+**DELETE** `/conversations/:id`
+
+Delete a conversation and all its messages.
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
+
+**Status Codes:**
+- `200`: Conversation deleted successfully
+- `401`: Unauthorized (missing or invalid token)
+- `404`: Conversation not found or not owned by user
+
+---
+
 ### Onboarding - Save Preferences
 
 **POST** `/onboarding/preferences`
@@ -100,9 +224,9 @@ Store user preferences from the onboarding flow.
 **Request:**
 ```json
 {
-  "userId": "user-123",
   "preferredSupportStyle": "family_community",
   "topicsToAvoid": ["medication", "grief"],
+  "topicsOfConcern": ["work stress", "family relationships"],
   "languages": ["en", "es"],
   "culturalContext": "First-generation immigrant, family-centered values"
 }
@@ -117,6 +241,7 @@ Store user preferences from the onboarding flow.
     "userId": "user-123",
     "preferredSupportStyle": "family_community",
     "topicsToAvoid": ["medication", "grief"],
+    "topicsOfConcern": ["work stress", "family relationships"],
     "languages": ["en", "es"],
     "culturalContext": "First-generation immigrant, family-centered values",
     "createdAt": "2026-08-21T14:23:45Z",
@@ -145,6 +270,7 @@ Retrieve stored preferences for a user.
   "userId": "user-123",
   "preferredSupportStyle": "family_community",
   "topicsToAvoid": ["medication"],
+  "topicsOfConcern": ["work stress"],
   "languages": ["en"],
   "culturalContext": null,
   "createdAt": "2026-08-21T14:23:45Z",
@@ -348,11 +474,13 @@ All errors follow this format:
 
 ## Authentication
 
-Currently, the API is public (for hackathon build). In production, add JWT authentication:
+All endpoints require JWT authentication via Bearer token:
 
 ```
 Authorization: Bearer <token>
 ```
+
+Obtain a token via `POST /auth/login` (email, password) or `POST /auth/signup` (email, password). Include the token in the `Authorization` header on all subsequent requests. The token expires after 7 days; users must re-authenticate to continue.
 
 ---
 
@@ -392,4 +520,4 @@ The API accepts requests from `CORS_ORIGIN` environment variable (default: `http
 - User IDs can be any unique string (UUID recommended)
 - Preferences are optional on first chat message
 - Crisis detection runs on every message (server-side)
-- All data except preferences/plans is transient
+- Conversations, messages, preferences, and safety plans persist across sessions

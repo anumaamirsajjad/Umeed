@@ -310,8 +310,7 @@ curl -X POST http://localhost:5000/onboarding/preferences \
 1. **Session expiry**: Currently tokens expire after 7 days. Users will need to re-login.
 2. **No password reset**: Add this feature for production.
 3. **No email verification**: Add this for production security.
-4. **Chat history**: Currently stored in-memory per session, not persisted to database.
-5. **Rate limiting**: Not implemented - add this before production deployment.
+4. **Rate limiting**: Not implemented - add this before production deployment.
 
 ---
 
@@ -320,13 +319,12 @@ curl -X POST http://localhost:5000/onboarding/preferences \
 1. [ ] Email verification on signup
 2. [ ] Password reset flow
 3. [ ] Rate limiting on auth endpoints
-4. [ ] Persistent chat history (with encryption if PII)
-5. [ ] Admin dashboard for user management
-6. [ ] GDPR compliance (data export, deletion)
-7. [ ] Improved error messages
-8. [ ] Logging and monitoring
-9. [ ] Load testing
-10. [ ] Penetration testing
+4. [ ] Admin dashboard for user management
+5. [ ] GDPR compliance (data export, deletion)
+6. [ ] Improved error messages
+7. [ ] Logging and monitoring
+8. [ ] Load testing
+9. [ ] Penetration testing
 
 ---
 

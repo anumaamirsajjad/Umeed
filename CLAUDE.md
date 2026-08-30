@@ -6,7 +6,7 @@
 ## What This Codebase Does
 
 1. **Onboarding** → Gentle, preference-based questions (not demographics)
-2. **Conversational AI** → Claude API with carefully engineered system prompt
+2. **Conversational AI** → LLM (via OpenRouter) with a carefully engineered system prompt
 3. **Crisis Detection** → Server-side detection of crisis language → immediate escalation
 4. **Safety Planning** → Guided builder for personal safety plan (exportable PDF)
 5. **Resource Directory** → Filterable crisis/professional resources by region
@@ -34,11 +34,11 @@
 
 ### Backend (Node.js/Express)
 - `backend/src/index.ts` — Entry point
-- `backend/src/config/systemPrompt.ts` — **THE CRITICAL PIECE** — Claude system prompt with guardrails
-- `backend/src/services/claudeService.ts` — Claude API wrapper
+- `backend/src/config/systemPrompt.ts` — **THE CRITICAL PIECE** — system prompt with guardrails
+- `backend/src/services/claudeService.ts` — LLM API wrapper (OpenRouter)
 - `backend/src/services/crisisDetectionService.ts` — Crisis language detection logic
 - `backend/src/controllers/chatController.ts` — Chat endpoint logic
-- `backend/src/db/schema.ts` — Database structure (user preferences, safety plans, NOT full chat history)
+- `backend/src/db/schema.ts` — Database structure documentation (user preferences, safety plans, conversations, and messages); see `conversationService.ts` for runtime implementation
 - `backend/src/routes/*.ts` — API endpoints
 
 ### Frontend (React/Next.js)
@@ -48,7 +48,8 @@
 - `frontend/app/safety-plan/builder/page.tsx` — Safety plan builder
 - `frontend/app/safety-plan/view/page.tsx` — View/export safety plan
 - `frontend/app/resources/page.tsx` — Filterable resource directory
-- `frontend/components/common/CrisisAlert.tsx` — **Crisis escalation UI** — always visible when triggered
+- `frontend/app/crisis/page.tsx` — **Crisis escalation UI ("Safety Mode")** — full-page redirect from chat (via `sessionStorage` handoff, not an inline component); displays crisis resources full-screen
+- `frontend/app/crisis/breathe/page.tsx` — Breathing exercise sub-screen linked from Safety Mode
 
 ### Documentation
 - `docs/CRISIS_DETECTION.md` — Crisis detection test cases, phrasings, expected responses
@@ -75,18 +76,20 @@
 
 ## Database Schema
 
-Three main tables:
+Five main tables:
 - `user_preferences` — onboarding choices (preference_type, preference_value, user_id, created_at)
 - `safety_plans` — user safety plans (user_id, warning_signs, coping_strategies, trusted_contacts, reasons_to_stay_safe, updated_at)
+- `conversations` — persisted chat conversations (id, user_id, title, detectedLanguage, created_at, updated_at)
+- `messages` — conversation messages (id, conversation_id, user_id, content, role, created_at)
 - `crisis_resources` — seeded from `resources-db/resources.json` (name, type, region, hotline, web_url, languages, availability)
 
-**No full chat history stored.** Only preferences and explicitly saved safety plans.
+All data persists to flat JSON files (`backend/data/*.json`) via `backend/src/db/jsonStore.ts`, not a live SQL database. Conversations and their full message histories are saved, allowing users to revisit past conversations, and can be deleted individually by users.
 
 ## Deployment
 
 **Frontend:** Vercel (automatic on main branch push)  
 **Backend:** Render or Railway (automatic on main branch push)  
-Env vars: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `NEXT_PUBLIC_API_URL`
+Env vars: `ANTHROPIC_API_KEY`, `JWT_SECRET`, `DATABASE_URL`, `NEXT_PUBLIC_API_URL`
 
 ## Testing Checklist (Day 7)
 
@@ -110,9 +113,5 @@ Env vars: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `NEXT_PUBLIC_API_URL`
 
 ---
 
-**Last updated:** 2026-08-23  
-**Next session focus:** Phase 6 (testing/security/docs) is done. `npm run test:crisis-classifier`
-(20 PASS/1 WARN/2 FAIL of 23) and `npm run test:system-prompt` (8/8, avg 4.00/5) have both been
-run — see `COMPLETE_IMPLEMENTATION_PLAN.md` Phase 6 summary for details and the two classifier
-misses worth investigating. What's left: manually click through the app on mobile + with a
-screen reader, and deployment (Vercel + Render/Railway) — see `docs/DEPLOYMENT.md`.
+**Last updated:** 2026-08-29  
+**Latest changes (Task 7):** Fixed `topicsOfConcern` preference bug (was silently dropped before reaching the prompt, now correctly wired end-to-end). Fixed pattern-detection bug (feature now actually fires every 5th user message in a conversation). Added persisted, multi-conversation chat history: conversations and messages now stored via `conversationService.ts` (JSON-file-backed, same mechanism as preferences/safety-plans), with a new REST resource (`GET/PATCH/DELETE /conversations/:id`, `GET /conversations`), sidebar UI for conversation management, and ability to rename or delete conversations. Removed in-memory `sessionService.ts` and `POST /chat/new` endpoint (conversation creation is now lazy via `POST /chat`).

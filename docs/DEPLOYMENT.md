@@ -13,7 +13,8 @@ as the checklist for doing that, not a record that it's already live.
 3. Environment variables:
    | Var | Value |
    |---|---|
-   | `ANTHROPIC_API_KEY` | your key — required, `env.ts` throws on boot without it |
+   | `ANTHROPIC_API_KEY` | your OpenRouter API key — required, `env.ts` throws on boot without it (sent to OpenRouter, not Anthropic directly) |
+   | `JWT_SECRET` | your key — required, `env.ts` throws on boot without it. Generate with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
    | `NODE_ENV` | `production` |
    | `PORT` | leave unset; Render/Railway inject their own and `env.ts` reads `process.env.PORT` |
    | `CORS_ORIGIN` | the deployed frontend URL, e.g. `https://umeed.vercel.app` (defaults to `http://localhost:3000` otherwise — chat requests from the real frontend will be blocked by CORS if you skip this) |
@@ -21,8 +22,8 @@ as the checklist for doing that, not a record that it's already live.
 4. Persistence: the app uses a file-backed JSON store (`backend/data/*.json`, see
    `db/jsonStore.ts`), not a real database — despite `DATABASE_URL` existing as an env var,
    nothing currently reads it. On most PaaS free tiers the filesystem is **ephemeral**
-   (wiped on redeploy/restart), so preferences/safety plans/mood entries will not survive a
-   redeploy. Acceptable for a hackathon demo; flag as a known limitation, not a bug, if it
+   (wiped on redeploy/restart), so preferences, safety plans, conversations, messages, and mood entries
+   will not survive a redeploy. Acceptable for a hackathon demo; flag as a known limitation, not a bug, if it
    comes up. A persistent disk (Render) or volume (Railway) fixes this if needed.
 5. Verify after deploy: `GET https://<backend-url>/health` → `{"status":"ok"}`.
 

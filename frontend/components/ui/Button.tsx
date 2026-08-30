@@ -19,8 +19,11 @@ const base =
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 ' +
-    'focus-visible:outline-primary-500 dark:bg-primary-500 dark:hover:bg-primary-400 dark:text-surface-darker',
+    'bg-primary-700 text-white hover:bg-primary-800 active:bg-primary-900 ' +
+    // Fixed dark ink for text-on-accent, independent of the `surface-darker`
+    // elevation token (that one moves for card/bubble elevation; this button
+    // text needs to stay dark against primary-500 regardless).
+    'focus-visible:outline-primary-600 dark:bg-primary-500 dark:hover:bg-primary-400 dark:text-ink-inverse',
   secondary:
     'bg-accent-100 text-accent-900 hover:bg-accent-200 active:bg-accent-300 ' +
     'focus-visible:outline-accent-500 dark:bg-accent-900/40 dark:text-accent-100 dark:hover:bg-accent-900/60',
@@ -29,13 +32,16 @@ const variants: Record<Variant, string> = {
     'focus-visible:outline-primary-500 dark:text-primary-100 dark:hover:bg-white/5',
   // Reserved for crisis-adjacent actions — not general destructive UI.
   danger:
-    'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus-visible:outline-red-500',
+    'bg-crisis-600 text-white hover:bg-crisis-700 active:bg-crisis-700 focus-visible:outline-crisis-600',
 };
 
+// min-h keeps every button at or above a 44px touch target. `sm` is the one
+// exception at 36px — it is for inline, secondary actions inside dense rows,
+// never for a primary action.
 const sizes: Record<Size, string> = {
-  sm: 'text-sm px-3 py-1.5',
-  md: 'text-base px-4 py-2.5',
-  lg: 'text-lg px-6 py-3',
+  sm: 'text-sm px-3 py-1.5 min-h-9',
+  md: 'text-base px-4 py-2.5 min-h-11',
+  lg: 'text-lg px-6 py-3 min-h-12',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

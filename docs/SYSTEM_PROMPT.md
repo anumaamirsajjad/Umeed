@@ -6,7 +6,7 @@
 
 ## Overview
 
-The system prompt is the constitutional instruction set for Claude's behavior in Umeed. It lives in `backend/src/config/systemPrompt.ts` and is loaded on every chat message.
+The system prompt is the constitutional instruction set for the assistant model's behavior in Umeed. It lives in `backend/src/config/systemPrompt.ts` and is loaded on every chat message. (The model is accessed via OpenRouter using gpt-3.5-turbo.)
 
 **This is the most critical piece of the application.** It enforces:
 1. Never diagnose mental health conditions
@@ -47,9 +47,8 @@ The system prompt is the constitutional instruction set for Claude's behavior in
 Personalization is based ONLY on what the user explicitly told us:
 - Preferred support style (family, professional, solo, mixed)
 - Topics to avoid
-- Language preferences
-- Cultural context (if shared)
-- Languages
+- Topics of concern (what's currently on their mind, captured at onboarding)
+- Language preferences (ISO 639-1 codes)
 - Optional cultural context (if they volunteer it)
 
 Not based on:
@@ -119,7 +118,10 @@ On the first chat message, we have no preferences yet, so we send only the base 
 - Adapted responses based on support style
 - Feedback: Good progress. Test with actual users needed.
 
-[Next iterations will be documented as they happen during Day 3]
+### Version 1.3 (Preference Bug Fix)
+- **Date:** 2026-08-29
+- **Change:** Fixed bug where `topicsOfConcern` preferences were silently dropped in the caller (`chatController.ts`) before reaching the prompt. No changes to the prompt's own text/logic—only the caller's preference object was corrected to include this field end-to-end.
+- **Impact:** Users' stated topics of concern now correctly influence system prompt personalization.
 
 ## Testing the Prompt
 
@@ -253,6 +255,6 @@ If you can't confidently answer "yes" to Q1-5, don't deploy.
 
 ---
 
-**Last updated:** 2026-08-21  
+**Last updated:** 2026-08-30  
 **Next major review:** Day 3 of build (prompt refinement iteration)  
-**Deployed version:** 1.2 (personalization added)
+**Deployed version:** 1.3 (topicsOfConcern fix)

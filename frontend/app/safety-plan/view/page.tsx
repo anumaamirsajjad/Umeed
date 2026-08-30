@@ -4,16 +4,17 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getSafetyPlan, exportSafetyPlanPDF } from '@/lib/api';
 import { ROUTES } from '@/lib/constants';
+import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { SafetyPlan } from '@/lib/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { BottomNav } from '@/components/common/BottomNav';
+import { Icon, type IconName } from '@/components/ui/Icon';
 
-function PlanSection({ title, icon, items, emptyLabel }: { title: string; icon: string; items: string[]; emptyLabel: string }) {
+function PlanSection({ title, icon, items, emptyLabel }: { title: string; icon: IconName; items: string[]; emptyLabel: string }) {
   return (
     <div className="space-y-2">
-      <h2 className="font-serif text-lg font-semibold text-ink-light dark:text-ink-dark">
-        <span aria-hidden="true">{icon} </span>
+      <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
+        <Icon name={icon} className="icon-inline text-primary-600 dark:text-primary-300" />
         {title}
       </h2>
       {items.length > 0 ? (
@@ -49,21 +50,24 @@ function ViewSkeleton() {
 export default function SafetyPlanViewPage() {
   const [plan, setPlan] = useState<SafetyPlan | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [userId] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('userId') || '' : ''));
+  const [exportError, setExportError] = useState(false);
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
 
   useEffect(() => {
-    if (!userId) {
-      if (typeof window !== 'undefined') window.location.href = ROUTES.onboarding;
-      return;
-    }
+    if (authLoading || !isAuthenticated) return;
     getSafetyPlan()
       .then(setPlan)
+      // A failed load is not an empty plan. Telling someone with a saved plan
+      // that they never made one is the worse of the two wrong answers.
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [authLoading, isAuthenticated]);
 
   const handleExportPDF = async () => {
     setExporting(true);
+    setExportError(false);
     try {
       const blob = await exportSafetyPlanPDF();
       const url = window.URL.createObjectURL(blob);
@@ -76,32 +80,42 @@ export default function SafetyPlanViewPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error exporting PDF:', error);
+      setExportError(true);
     } finally {
       setExporting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface-light dark:bg-surface-dark pb-24">
-      <div className="flex-1 px-6 pt-16">
+    <div className="min-h-[100dvh] flex flex-col bg-surface-light dark:bg-surface-dark">
+      <div className="flex-1 px-6 pt-10">
         <div className="max-w-2xl mx-auto space-y-6">
-          <Card
-            padding="lg"
-            className="rounded-card space-y-8 bg-gradient-to-br from-primary-50 to-surface dark:from-surface-darker dark:to-surface-dark"
-          >
+          <Card padding="lg" className="space-y-8">
             {loading ? (
               <ViewSkeleton />
+            ) : loadError ? (
+              <div className="text-center space-y-4 py-8" role="alert">
+                <p className="text-base text-crisis-700 dark:text-crisis-300">
+                  We couldn&apos;t load your safety plan just now.
+                </p>
+                <Button className="rounded-pill" onClick={() => window.location.reload()}>
+                  Try again
+                </Button>
+              </div>
             ) : !plan ? (
               <div className="text-center space-y-4 py-8">
-                <p className="text-base text-ink-muted">You haven't saved a safety plan yet.</p>
-                <Link href={ROUTES.safetyPlanBuilder}>
-                  <Button className="rounded-pill">Build your safety plan</Button>
+                <p className="text-base text-ink-muted">You haven&apos;t saved a safety plan yet.</p>
+                <Link
+                  href={ROUTES.safetyPlanBuilder}
+                  className="inline-flex items-center justify-center min-h-11 rounded-pill bg-primary-700 hover:bg-primary-800 text-white font-semibold px-6 transition-colors duration-micro ease-umeed"
+                >
+                  Build your safety plan
                 </Link>
               </div>
             ) : (
               <>
                 <div className="text-center space-y-1">
-                  <h1 className="font-serif text-2xl font-bold text-ink-light dark:text-ink-dark">
+                  <h1 className="font-display text-2xl font-bold text-ink-light dark:text-ink-dark">
                     My Personal Safety Plan
                   </h1>
                   {plan.updatedAt && (
@@ -112,12 +126,13 @@ export default function SafetyPlanViewPage() {
                 </div>
 
                 <div className="space-y-6">
-                  <PlanSection title="Warning Signs" icon="📍" items={plan.warningSigns} emptyLabel="Nothing added yet." />
-                  <PlanSection title="Coping Strategies" icon="🛠️" items={plan.copingStrategies} emptyLabel="Nothing added yet." />
+                  <PlanSection title="Warning Signs" icon="flag" items={plan.warningSigns} emptyLabel="Nothing added yet." />
+                  <PlanSection title="Coping Strategies" icon="leaf" items={plan.copingStrategies} emptyLabel="Nothing added yet." />
 
                   <div className="space-y-2">
-                    <h2 className="font-serif text-lg font-semibold text-ink-light dark:text-ink-dark">
-                      <span aria-hidden="true">👥 </span>People in Your Corner
+                    <h2 className="font-display text-lg font-semibold text-ink-light dark:text-ink-dark flex items-center gap-2">
+                      <Icon name="people" className="icon-inline text-primary-600 dark:text-primary-300" />
+                      People in Your Corner
                     </h2>
                     {plan.trustedContacts.length > 0 ? (
                       <ul className="space-y-1.5">
@@ -141,32 +156,42 @@ export default function SafetyPlanViewPage() {
                     )}
                   </div>
 
-                  <PlanSection title="What Keeps You Going" icon="💪" items={plan.reasonsToStaySafe} emptyLabel="Nothing added yet." />
+                  <PlanSection title="What Keeps You Going" icon="heart" items={plan.reasonsToStaySafe} emptyLabel="Nothing added yet." />
                   <PlanSection
                     title="Making Space Safer"
-                    icon="🏠"
+                    icon="house"
                     items={plan.environmentSafetySteps}
                     emptyLabel="Nothing added yet."
                   />
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <Link href={ROUTES.safetyPlanBuilder} className="flex-1">
-                    <Button variant="ghost" className="w-full rounded-pill">
+                {/* These were <Link><Button/></Link> — a <button> inside an
+                    <a>, which is invalid and produces two tab stops. The link
+                    is now styled directly. */}
+                <div className="space-y-2 pt-2">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Link
+                      href={ROUTES.safetyPlanBuilder}
+                      className="flex-1 inline-flex items-center justify-center min-h-11 rounded-pill font-semibold text-primary-800 dark:text-primary-100 hover:bg-primary-100 dark:hover:bg-white/5 transition-colors duration-micro ease-umeed"
+                    >
                       Edit plan
+                    </Link>
+                    <Button className="flex-1 rounded-pill gap-1.5" loading={exporting} onClick={handleExportPDF}>
+                      <Icon name="download" className="icon-inline" />
+                      Export as PDF
                     </Button>
-                  </Link>
-                  <Button className="flex-1 rounded-pill" loading={exporting} onClick={handleExportPDF}>
-                    📄 Export as PDF
-                  </Button>
+                  </div>
+                  {exportError && (
+                    <p className="text-sm text-crisis-700 dark:text-crisis-300 text-center" role="alert">
+                      That export didn&apos;t go through. Try again in a moment.
+                    </p>
+                  )}
                 </div>
               </>
             )}
           </Card>
         </div>
       </div>
-
-      <BottomNav active="plan" />
     </div>
   );
 }

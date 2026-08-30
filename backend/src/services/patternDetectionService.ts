@@ -145,10 +145,26 @@ export function getActivePatterns(userId: string): DetectedPattern[] {
  */
 function savePattern(pattern: DetectedPattern): void {
   try {
-    logger.debug(`Saving pattern: ${pattern.patternText}`);
-
     const table = loadTable<DetectedPattern>(TABLE);
-    table[pattern.id] = pattern;
+
+    // Dedupe: if this user already has a pattern with the same text, update
+    // it in place instead of inserting a near-duplicate row.
+    const existing = Object.values(table).find(
+      p => p.userId === pattern.userId && p.patternText === pattern.patternText
+    );
+
+    if (existing) {
+      logger.debug(`Updating existing pattern: ${pattern.patternText}`);
+      existing.lastMentioned = pattern.lastMentioned;
+      existing.frequency += 1;
+      existing.confidence = pattern.confidence;
+      existing.evidence = [...existing.evidence, ...pattern.evidence];
+      table[existing.id] = existing;
+    } else {
+      logger.debug(`Saving pattern: ${pattern.patternText}`);
+      table[pattern.id] = pattern;
+    }
+
     saveTable(TABLE, table);
   } catch (error) {
     logger.error('Error saving pattern', error);

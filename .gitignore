@@ -35,3 +35,9 @@ backend/data/
 # Logs
 logs/
 *.log
+
+# Superpowers SDD workspace (scratch)
+.superpowers/
+
+# TypeScript build cache
+*.tsbuildinfo

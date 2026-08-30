@@ -1,8 +1,7 @@
 import env from '../config/env.js';
 import buildSystemPrompt from '../config/systemPrompt.js';
 import { buildPatternSection, type DetectedPattern } from './patternDetectionService.js';
-import type { UserPreferences, ChatMessage } from '../types/index.js';
-import type { DetectedLanguage } from './sessionService.js';
+import type { UserPreferences, ChatMessage, DetectedLanguage } from '../types/index.js';
 import { logger } from '../utils/logger.js';
 
 const OPENROUTER_API_KEY = env.ANTHROPIC_API_KEY; // Using same env var for OpenRouter key
@@ -77,7 +76,7 @@ export async function sendMessage(
         'X-Title': 'Umeed - Mental Health Companion',
       },
       body: JSON.stringify({
-        model: 'openai/gpt-3.5-turbo',
+        model: 'minimax/minimax-m3:free',
         messages: messages,
         max_tokens: maxTokens,
         temperature: 0.9,

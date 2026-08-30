@@ -4,10 +4,10 @@ import { sendMessage, PATTERN_INSIGHT_MARKER } from '../services/claudeService.j
 import { detectCrisis } from '../services/crisisDetectionService.js';
 import { classifyCrisisRisk } from '../services/crisisClassifierService.js';
 import { detectPatterns, getActivePatterns, decayOldPatterns } from '../services/patternDetectionService.js';
-import * as sessionService from '../services/sessionService.js';
+import * as conversationService from '../services/conversationService.js';
 import { detectLanguage } from '../services/languageDetectionService.js';
 import { getTopCrisisResources } from '../services/resourcesService.js';
-import type { ChatRequest, ChatResponse } from '../types/index.js';
+import type { ChatRequest, ChatResponse, DetectedLanguage } from '../types/index.js';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -26,7 +26,7 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const { message, preferences, comfortMode } = req.body as ChatRequest;
+    const { message, preferences, comfortMode, conversationId } = req.body as ChatRequest;
 
     // Validate required fields
     if (!message || !message.trim()) {
@@ -36,6 +36,18 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
 
     logger.info(`Chat request from user: ${userId}`);
 
+    // Resolve the conversation this message belongs to: an existing one
+    // (ownership-checked) if the client sent an id, otherwise lazily create
+    // one — this is the only way conversations come into existence.
+    const conversation = conversationId
+      ? conversationService.getConversation(userId, conversationId)
+      : conversationService.createConversation(userId);
+
+    if (!conversation) {
+      res.status(404).json({ error: 'Conversation not found' });
+      return;
+    }
+
     // CRITICAL: Detect crisis FIRST (server-side, independent of Claude)
     const crisisResult = detectCrisis(message);
 
@@ -43,17 +55,25 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
     const activePatterns = getActivePatterns(userId);
     logger.debug(`User has ${activePatterns.length} active patterns`);
 
-    // Server-side session memory: full history for this user, in order
-    const conversationHistory = sessionService.getHistory(userId);
-    const recentAssistantMessages = sessionService.getRecentAssistantMessages(userId, 3);
+    // Persisted conversation history for this thread, in order (prior turns
+    // only — this turn's message hasn't been appended yet). Capped to the
+    // most recent 20 messages so long-lived threads don't eventually exceed
+    // the model's context window.
+    const conversationHistory = conversationService
+      .getMessages(conversation.id)
+      .slice(-20)
+      .map(m => ({ role: m.role, content: m.content }));
+    const recentAssistantMessages = conversationService.getRecentAssistantMessages(conversation.id, 3);
 
     // Language/register detection: run on every message so we adapt to
     // mid-conversation switches, not just the first message
     const languageResult = detectLanguage(message);
-    let detectedLanguage = sessionService.getDetectedLanguage(userId);
+    let detectedLanguage = conversationService.getDetectedLanguage(conversation.id) as
+      | DetectedLanguage
+      | undefined;
     if (!detectedLanguage || languageResult.confidence >= 0.5) {
       detectedLanguage = languageResult.label;
-      sessionService.setDetectedLanguage(userId, detectedLanguage);
+      conversationService.setDetectedLanguage(conversation.id, detectedLanguage);
     }
 
     // Get Claude's reply AND the independent crisis classification IN PARALLEL —
@@ -70,6 +90,7 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
             name: preferences.name,
             preferredSupportStyle: preferences.preferredSupportStyle || 'mixed',
             topicsToAvoid: preferences.topicsToAvoid || [],
+            topicsOfConcern: preferences.topicsOfConcern || [],
             languages: preferences.languages || ['en'],
             culturalContext: preferences.culturalContext,
             createdAt: new Date(),
@@ -86,6 +107,38 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
       ]);
     } catch (error) {
       logger.error('Claude API error', error);
+
+      // Fail-safe: sendMessage() is the only thing that can throw here
+      // (classifyCrisisRisk never throws — it fails safe to 'ambiguous'
+      // internally). crisisResult was already computed above, independent
+      // of the LLM call — don't let a provider/timeout error silently
+      // discard a real crisis signal on top of failing to reply at all.
+      if (crisisResult.isCrisis) {
+        const fallbackMessage =
+          "I'm having trouble responding right now, but I don't want that to get in the way of you having support.";
+
+        conversationService.appendMessage(conversation.id, userId, 'user', message);
+        conversationService.appendMessage(conversation.id, userId, 'assistant', fallbackMessage);
+
+        const crisisHotlines = await getTopCrisisResources(userId, 3);
+
+        const fallbackResponse: ChatResponse = {
+          id: `msg-${Date.now()}`,
+          conversationId: conversation.id,
+          message: fallbackMessage,
+          isCrisis: true,
+          crisisAlert: {
+            triggered: true,
+            severity: crisisResult.severity === 'critical' ? 'critical' : 'high',
+            message: 'If you\'re in crisis, please reach out for help immediately.',
+            resources: crisisHotlines,
+          },
+        };
+
+        res.json(fallbackResponse);
+        return;
+      }
+
       res.status(500).json({
         error: 'Failed to get response from Claude',
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -98,25 +151,32 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
     );
 
     // Detect and strip the pattern-insight marker (see claudeService) before this
-    // reply is persisted to session history or sent to the user.
+    // reply is persisted to conversation history or sent to the user.
     const hasPatternInsight = claudeResponse.includes(PATTERN_INSIGHT_MARKER);
     if (hasPatternInsight) {
       claudeResponse = claudeResponse.replace(PATTERN_INSIGHT_MARKER, '').trimEnd();
     }
 
-    // Combine both independent safety layers — either one flagging is enough to escalate
-    // Only escalate on ACUTE classifier signals (not ambiguous/failsafe)
-    const classifierEscalates = classification.riskLevel === 'acute';
+    // Combine both independent safety layers — either one flagging is enough to escalate.
+    // 'ambiguous' escalates too (gentler framing below) per the project's safety
+    // philosophy: ambiguous language → escalate, never silently pass over it.
+    const classifierEscalates = classification.riskLevel === 'acute' || classification.riskLevel === 'ambiguous';
     const isCrisis = crisisResult.isCrisis || classifierEscalates;
     const isAcute = classification.riskLevel === 'acute' || crisisResult.severity === 'critical';
     const severity: 'high' | 'critical' | undefined = isCrisis ? (isAcute ? 'critical' : 'high') : undefined;
 
-    // Persist this turn into server-side session memory for future requests
-    sessionService.appendTurn(userId, message, claudeResponse);
+    // Persist this turn into the conversation (user message first, matching
+    // the previous session store's turn order)
+    conversationService.appendMessage(conversation.id, userId, 'user', message);
+    conversationService.appendMessage(conversation.id, userId, 'assistant', claudeResponse);
 
     // Detect new patterns (runs every 5+ messages to avoid spam)
     // This is async and non-blocking - we don't wait for it
-    detectPatterns(userId, [{ role: 'user', content: message }])
+    const userMessagesForPatterns = conversationService
+      .getMessages(conversation.id)
+      .filter(m => m.role === 'user')
+      .map(m => ({ role: 'user' as const, content: m.content }));
+    detectPatterns(userId, userMessagesForPatterns)
       .then(newPatterns => {
         if (newPatterns.length > 0) {
           logger.info(`Detected ${newPatterns.length} new patterns for user ${userId}`);
@@ -130,6 +190,7 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
     // Build response
     const response: ChatResponse = {
       id: `msg-${Date.now()}`,
+      conversationId: conversation.id,
       message: claudeResponse,
       isCrisis,
       ...(hasPatternInsight ? { messageType: 'pattern_insight' as const } : {}),
@@ -169,29 +230,4 @@ export async function handleChat(req: AuthRequest, res: Response): Promise<void>
   }
 }
 
-/**
- * POST /chat/new
- * Clears server-side conversation memory so the user can start a fresh chat.
- * User ID comes from authenticated token
- */
-export async function handleNewChat(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    const userId = req.user?.userId;
-
-    if (!userId) {
-      res.status(401).json({ error: 'User not authenticated' });
-      return;
-    }
-
-    sessionService.clearSession(userId);
-    res.json({ success: true });
-  } catch (error) {
-    logger.error('Error clearing chat session', error);
-    res.status(500).json({
-      error: 'Failed to start new chat',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-}
-
-export default { handleChat, handleNewChat };
+export default { handleChat };
