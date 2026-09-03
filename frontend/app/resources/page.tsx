@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getResources, searchResources } from '@/lib/api';
-import { ACTIVE_CITY_FILTERS, ACTIVE_REGION } from '@/lib/cities';
-import { Chip } from '@/components/ui/Chip';
+import { ACTIVE_REGION } from '@/lib/cities';
 import { Icon } from '@/components/ui/Icon';
 import type { CrisisResource } from '@/lib/types';
 
@@ -86,7 +85,6 @@ export default function ResourcesPage() {
   const [matched, setMatched] = useState<CrisisResource[]>([]);
   const [other, setOther] = useState<CrisisResource[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCity, setSelectedCity] = useState<string | null>(null); // null = "All"
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 300);
 
@@ -103,10 +101,7 @@ export default function ResourcesPage() {
           return;
         }
 
-        const params: any = { region: ACTIVE_REGION };
-        if (selectedCity) params.city = selectedCity;
-
-        const data = await getResources(params);
+        const data = await getResources({ region: ACTIVE_REGION });
         setMatched(data.matched);
         setOther(data.other);
       } catch (error) {
@@ -117,9 +112,7 @@ export default function ResourcesPage() {
     };
 
     fetchResources();
-  }, [selectedCity, debouncedSearch]);
-
-  const isSearching = search.trim().length >= 2;
+  }, [debouncedSearch]);
 
   return (
     <div className="min-h-[100dvh] bg-surface-light dark:bg-surface-dark pb-16">
@@ -145,41 +138,6 @@ export default function ResourcesPage() {
         </div>
       </div>
 
-      <div className="px-6 md:px-10 pb-6">
-        {/* The right-edge fade is the only cue that more cities exist beyond
-            the viewport; without it the list looked complete at six. */}
-        <div className="relative">
-          <div
-            className="flex gap-2 overflow-x-auto pb-1 pr-6 [scrollbar-width:thin]"
-            role="group"
-            aria-label="Filter by city"
-          >
-            <Chip selected={selectedCity === null} disabled={isSearching} onClick={() => setSelectedCity(null)}>
-              All
-            </Chip>
-            {ACTIVE_CITY_FILTERS.map((city) => (
-              <Chip
-                key={city.code}
-                selected={selectedCity === city.code}
-                disabled={isSearching}
-                onClick={() => setSelectedCity(city.code)}
-              >
-                {city.label}
-              </Chip>
-            ))}
-          </div>
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-surface-light dark:from-surface-dark to-transparent"
-          />
-        </div>
-        {isSearching && (
-          <p className="mt-2 text-xs text-ink-muted" role="status">
-            City filters are paused while you search. Clear the search box to use them.
-          </p>
-        )}
-      </div>
-
       <div className="max-w-3xl mx-auto px-6 md:px-10">
         {loading ? (
           <div className="flex flex-col gap-4" role="status">
@@ -189,7 +147,7 @@ export default function ResourcesPage() {
           </div>
         ) : matched.length === 0 && other.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-base text-ink-muted">No resources found for your selection. Try a different city or search term.</p>
+            <p className="text-base text-ink-muted">No resources found. Try a different search term.</p>
           </div>
         ) : (
           <>

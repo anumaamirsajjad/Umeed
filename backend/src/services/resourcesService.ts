@@ -30,7 +30,7 @@ export function getAllResources(): CrisisResource[] {
   return cachedResources;
 }
 
-export function filterResources(options: { region?: string; type?: string; city?: string }): CrisisResource[] {
+export function filterResources(options: { region?: string; type?: string }): CrisisResource[] {
   let resources = getAllResources();
 
   if (options.region) {
@@ -38,12 +38,6 @@ export function filterResources(options: { region?: string; type?: string; city?
   }
   if (options.type) {
     resources = resources.filter(r => r.type === options.type);
-  }
-  if (options.city) {
-    // A resource with no `city` is nationwide — keep it visible under every
-    // city filter rather than hiding it behind a specific-city selection.
-    const city = options.city.toLowerCase();
-    resources = resources.filter(r => !r.city || r.city.toLowerCase() === city);
   }
 
   return resources;

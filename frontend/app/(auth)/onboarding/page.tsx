@@ -53,6 +53,14 @@ export default function Onboarding() {
   const [step, setStep] = useState<Step>('redirect');
   const [loading, setLoading] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [justSignedUp, setJustSignedUp] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem('justSignedUp') === 'true') {
+      setJustSignedUp(true);
+      sessionStorage.removeItem('justSignedUp');
+    }
+  }, []);
 
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
@@ -127,8 +135,12 @@ export default function Onboarding() {
       {step === 'redirect' && (
         <div className="min-h-[100dvh] flex items-center justify-center">
           <div className="text-center">
-            <h1 className="font-display text-4xl font-bold text-ink-light dark:text-ink-dark mb-3">Welcome back</h1>
-            <p className="text-lg text-ink-muted">Loading your preferences...</p>
+            <h1 className="font-display text-4xl font-bold text-ink-light dark:text-ink-dark mb-3">
+              {justSignedUp ? 'Welcome' : 'Welcome back'}
+            </h1>
+            <p className="text-lg text-ink-muted">
+              {justSignedUp ? 'Your plan is getting ready...' : 'Loading your preferences...'}
+            </p>
           </div>
         </div>
       )}

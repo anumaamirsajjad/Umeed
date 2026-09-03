@@ -14,15 +14,14 @@ import { logger } from '../utils/logger.js';
  */
 export async function handleGetResources(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const { region, type, city } = req.query;
+    const { region, type } = req.query;
     const userId = req.user?.userId;
 
-    logger.info(`Fetching resources: region=${region}, type=${type}, city=${city}, authenticated=${!!userId}`);
+    logger.info(`Fetching resources: region=${region}, type=${type}, authenticated=${!!userId}`);
 
     const resources = filterResources({
       region: typeof region === 'string' ? region : undefined,
       type: typeof type === 'string' ? type : undefined,
-      city: typeof city === 'string' ? city : undefined,
     });
 
     const response = await matchForUser(resources, userId);

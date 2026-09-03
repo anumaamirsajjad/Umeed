@@ -128,7 +128,7 @@ export async function generateSafetyPlanPDF(plan: SafetyPlan): Promise<Buffer> {
   });
   yPos -= 20;
   const crisisFooterLines = wrapText(
-    'In crisis? Call Rozan Helpline at 0800-111-00 — confidential counseling & crisis intervention, available 24/7.',
+    'In crisis? Call Rozan Helpline at 0304-111-1741 — confidential counseling & crisis intervention, available 24/7.',
     boldFont,
     11,
     contentWidth

@@ -21,7 +21,10 @@ import { logger } from '../utils/logger.js';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_API_KEY = env.ANTHROPIC_API_KEY;
-const CLASSIFIER_TIMEOUT_MS = 8000;
+// 8s was too tight for the free-tier model's multi-provider routing under load —
+// timeouts fail safe to "ambiguous", which always escalates, so a too-short timeout
+// here reads to users as spurious crisis alerts on ordinary messages.
+const CLASSIFIER_TIMEOUT_MS = 15000;
 
 export type RiskLevel = 'none' | 'ambiguous' | 'acute';
 export type ClassifierLanguage = 'en' | 'roman_urdu' | 'roman_punjabi' | 'mixed';

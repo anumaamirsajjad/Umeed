@@ -13,8 +13,19 @@ export const env = {
   // password. See backend/src/tests/jwtSecret.test.ts.
   JWT_SECRET: process.env.JWT_SECRET || '',
 
-  // Crisis classifier — cheap/fast model, runs on every message in parallel with the main reply
-  CRISIS_CLASSIFIER_MODEL: process.env.CRISIS_CLASSIFIER_MODEL || 'meta-llama/llama-3.1-8b-instruct',
+  // Crisis classifier — runs on every message in parallel with the main reply.
+  // Needs to actually understand Roman Urdu/Punjabi idiom, not just English —
+  // the 8B model previously here was flagging ordinary colloquial venting
+  // (e.g. "sar phaar de mera nikama") as "ambiguous" on nearly every message.
+  // meta-llama/llama-3.3-70b-instruct:free was pulled from OpenRouter's free tier next
+  // (404 on every call) — since ANY classifier failure fails safe to "ambiguous", which
+  // always escalates, that 404 silently turned every single message into a crisis alert.
+  // Now points at the same model claudeService.ts already uses for the main chat reply,
+  // since that's a live-verified-working free slug on this OpenRouter account. If this
+  // gets deprecated too, check the classifier's fail-safe warnings in the logs (`Crisis
+  // classifier fail-safe triggered: api_error_...`) — a spike means the model died, not
+  // that every user suddenly did.
+  CRISIS_CLASSIFIER_MODEL: process.env.CRISIS_CLASSIFIER_MODEL || 'minimax/minimax-m3:free',
 
   // Database
   DATABASE_URL: process.env.DATABASE_URL || 'sqlite:data/rescue.db',

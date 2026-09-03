@@ -43,6 +43,7 @@ export default function SignupPage() {
     setSubmitting(true);
     try {
       await signup(email, password);
+      sessionStorage.setItem('justSignedUp', 'true');
       router.push(ROUTES.onboarding);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'We couldn’t create that account. Try again.');
@@ -57,7 +58,7 @@ export default function SignupPage() {
           <MoonToggle size="sm" />
         </div>
         <div className="flex justify-center mb-6">
-          <Image src="/logo.jpg" alt="Umeed" width={64} height={64} className="rounded-lg" />
+          <Image src="/logo.png" alt="Umeed" width={64} height={64} className="rounded-lg" />
         </div>
         <h1 className="font-display text-3xl font-bold text-center text-ink-light dark:text-ink-dark mb-1">
           Create your account

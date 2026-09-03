@@ -11,7 +11,6 @@ const router = express.Router();
  * Query params:
  * - region?: 'north-america' | 'europe' | 'asia-pacific' | 'south-asia' | 'global'
  * - type?: 'crisis_hotline' | 'professional' | 'support_group' | 'online_resource'
- * - city?: string (e.g. 'Karachi') — resources with no city are nationwide and always included
  *
  * Public route — no login required. If a valid Bearer token is present
  * (optionalAuth), personalized matching uses that authenticated user's

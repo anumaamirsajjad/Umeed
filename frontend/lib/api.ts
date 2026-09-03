@@ -175,7 +175,6 @@ export const getMoodCheckinStatus = async (): Promise<{ checkedInToday: boolean 
 export const getResources = async (filters?: {
   region?: string;
   country?: string;
-  city?: string;
   type?: string;
 }): Promise<ResourcesResponse> => {
   const { data } = await client.get('/resources', { params: filters });

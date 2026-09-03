@@ -78,7 +78,7 @@ export interface CrisisResource {
   type: 'crisis_hotline' | 'professional' | 'support_group' | 'online_resource';
   region: string;
   country: string;
-  // Absent = nationwide/not city-specific (shown regardless of city filter).
+  // Absent = nationwide/not city-specific; present = shown on the card as a locality label.
   city?: string;
   phone?: string;
   web?: string;
