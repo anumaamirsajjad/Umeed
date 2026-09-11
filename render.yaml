@@ -1,0 +1,31 @@
+# Render Blueprint — backend API on Render's free tier.
+# Render dashboard → New → Blueprint → pick this repo. See docs/DEPLOYMENT.md.
+services:
+  - type: web
+    name: umeed-backend
+    runtime: node
+    plan: free
+    # Commands cd into backend/ rather than using rootDir, because the backend reads
+    # ../resources-db/resources.json at runtime and needs the full repo checkout.
+    # --include=dev: NODE_ENV=production would otherwise skip typescript, so `tsc` fails.
+    buildCommand: cd backend && npm install --include=dev && npm run build
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - backend/**
+        - resources-db/**
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: ANTHROPIC_API_KEY
+        sync: false # OpenRouter key — entered in the dashboard, never committed
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false # deployed Vercel URL, e.g. https://umeed.vercel.app (no trailing slash)
+      - key: CRISIS_CLASSIFIER_MODEL
+        value: minimax/minimax-m3:free

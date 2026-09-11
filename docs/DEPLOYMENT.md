@@ -8,8 +8,18 @@ as the checklist for doing that, not a record that it's already live.
 
 ## Backend (Render / Railway)
 
-1. Create a new Web Service from the `Umeed` GitHub repo, root directory `backend/`.
-2. Build command: `npm install && npm run build`. Start command: `npm start`.
+**Fastest path (Render free tier):** Render dashboard → **New → Blueprint** → select this repo.
+`render.yaml` at the repo root configures the service; you'll only be prompted for
+`ANTHROPIC_API_KEY` and `CORS_ORIGIN` (`JWT_SECRET` is auto-generated). Free instances
+sleep after ~15 min idle, so the first request afterwards takes ~30–60s to wake up.
+
+Manual setup (Render or Railway):
+
+1. Create a new Web Service from the `Umeed` GitHub repo. Leave the root directory as the
+   repo root — the backend reads `../resources-db/resources.json` at runtime.
+2. Build command: `cd backend && npm install --include=dev && npm run build`. Start command:
+   `cd backend && npm start`. (`--include=dev` is required: with `NODE_ENV=production`, a plain
+   `npm install` skips devDependencies, so `tsc` is missing and the build fails.)
 3. Environment variables:
    | Var | Value |
    |---|---|

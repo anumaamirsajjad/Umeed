@@ -4,7 +4,12 @@ import { fileURLToPath } from 'url';
 import { logger } from '../utils/logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, '../../data');
+// On serverless/container platforms with a read-only filesystem (e.g. Cyclic's
+// Lambda runtime), only /tmp is writable. Data still won't survive a cold start,
+// but this at least lets writes succeed instead of throwing EROFS/EACCES.
+const DATA_DIR = process.env.NODE_ENV === 'production'
+  ? '/tmp/data'
+  : path.join(__dirname, '../../data');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
